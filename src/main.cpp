@@ -1,3 +1,6 @@
+#include <json/json.h>
+#include <tgbot/tgbot.h>
+
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
@@ -5,10 +8,6 @@
 
 #include "App.h"
 #include "DataManager.h"
-
-#include <tgbot/tgbot.h>
-#include <json/json.h>
-
 
 namespace io_interface {
 class DataManager;
@@ -35,5 +34,3 @@ int main() {
 
     return 0;
 }
-
-
