@@ -3,13 +3,14 @@
 namespace {
 volatile std::sig_atomic_t gStopProceedLoop{0};
 }
-void sigint_handler(int signal) { gStopProceedLoop = signal; }
+void sigint_handler(int signal) {
+    printf("STOP LOOP\n");
+    gStopProceedLoop = signal;
+}
 
 namespace core {
 
-bool App::initBot() {
-    return m_bot.initBot();
-}
+bool App::initBot() { return m_bot.initBot(); }
 
 void App::start() {
     try {
