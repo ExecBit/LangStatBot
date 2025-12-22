@@ -9,6 +9,14 @@
 
 namespace core {
 
+struct BotContext {
+    bool isWaitingWordToDictionary{false};
+    bool isWaitingStatOption{false};
+    bool isWaitingTime{false};
+
+    std::vector<std::string> m_bot_commands = {"start", "add_word", "show_words", "stat", "layout"};
+};
+
 class BotEntity {
 public:
     explicit BotEntity(std::string_view token, Data& data) : m_bot{std::string{token}}, m_data{data} {}
@@ -21,9 +29,7 @@ private:
     TgBot::Bot m_bot;
     Data& m_data;
 
-    bool m_test_text_state{false};
-
-    std::vector<std::string> m_bot_commands = {"start", "add_word", "show_words", "stat", "layout"};
+    BotContext m_context;
 };
 
 };  // namespace core

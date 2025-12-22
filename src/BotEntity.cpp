@@ -5,14 +5,19 @@
 
 namespace {
 
-void createOneColumnKeyboard(const std::vector<std::string>& buttonStrings, TgBot::ReplyKeyboardMarkup::Ptr& kb) {
-    for (size_t i = 0; i < buttonStrings.size(); ++i) {
-        std::vector<TgBot::KeyboardButton::Ptr> row;
-        TgBot::KeyboardButton::Ptr button(new TgBot::KeyboardButton);
-        button->text = buttonStrings[i];
-        button->requestContact = false;
-        button->requestLocation = false;
-        row.push_back(button);
+using namespace std;
+using namespace TgBot;
+
+void createKeyboard(const vector<vector<string>>& buttonLayout, ReplyKeyboardMarkup::Ptr& kb) {
+    for (size_t i = 0; i < buttonLayout.size(); ++i) {
+        vector<KeyboardButton::Ptr> row;
+        for (size_t j = 0; j < buttonLayout[i].size(); ++j) {
+            KeyboardButton::Ptr button(new KeyboardButton);
+            button->text = "/" + buttonLayout[i][j];
+            button->requestContact = false;
+            button->requestLocation = false;
+            row.push_back(button);
+        }
         kb->keyboard.push_back(row);
     }
 }
@@ -27,25 +32,34 @@ bool BotEntity::initBot() {
     m_bot.getApi().deleteWebhook();
     m_bot.getApi().deleteMyCommands();
 
-    TgBot::ReplyKeyboardMarkup::Ptr keyboardOneCol(new TgBot::ReplyKeyboardMarkup);
-    createOneColumnKeyboard({"show stat current month", "add time", "Option 3"}, keyboardOneCol);
+    ReplyKeyboardMarkup::Ptr keyboardWithLayout(new ReplyKeyboardMarkup);
+    createKeyboard({{"ping", "add_word"}, {"show_words", "add_time", "show_time"}}, keyboardWithLayout);
 
     CommandBuilder builder{m_bot};
 
     builder
+        .setCommand("ping",
+                    [&bot = m_bot, keyboardWithLayout](TgBot::Message::Ptr message) {
+                        bot.getApi().sendMessage(message->chat->id, "pong", nullptr, nullptr, keyboardWithLayout);
+                    })
         .setCommand("start",
-                    [&bot = m_bot](TgBot::Message::Ptr message) { bot.getApi().sendMessage(message->chat->id, "Hi!"); })
+                    [&bot = m_bot, keyboardWithLayout](TgBot::Message::Ptr message) {
+                        bot.getApi().sendMessage(message->chat->id, "choose option", nullptr, nullptr,
+                                                 keyboardWithLayout);
+                    })
         .setCommand("add_word",
-                    [&bot = m_bot, &test_text_state = m_test_text_state](TgBot::Message::Ptr message) {
+                    [&bot = m_bot,
+                     &isWaitingWordToDictionary = m_context.isWaitingWordToDictionary](TgBot::Message::Ptr message) {
                         printf("Enter text log\n");
                         bot.getApi().sendMessage(message->chat->id, "Enter text");
-                        test_text_state = true;
+                        isWaitingWordToDictionary = true;
                     })
 
         .setCommand("show_words",
-                    [&bot = m_bot, &data = m_data](TgBot::Message::Ptr message) {
+                    [&bot = m_bot, &data = m_data, keyboardWithLayout](TgBot::Message::Ptr message) {
                         if (data.words.empty()) {
-                            bot.getApi().sendMessage(message->chat->id, "Dictionary is empty");
+                            bot.getApi().sendMessage(message->chat->id, "Dictionary is empty", nullptr, nullptr,
+                                                     keyboardWithLayout);
                             return;
                         }
 
@@ -53,39 +67,56 @@ bool BotEntity::initBot() {
                         for (const auto& word : data.words) {
                             msg += word + '\n';
                         }
+                        bot.getApi().sendMessage(message->chat->id, msg, nullptr, nullptr, keyboardWithLayout);
+                    })
+
+        .setCommand("add_time",
+                    [&bot = m_bot, &isWaitingTime = m_context.isWaitingTime](TgBot::Message::Ptr message) {
+                        printf("Enter text log\n");
+                        bot.getApi().sendMessage(message->chat->id, "Enter text");
+                        isWaitingTime = true;
+                    })
+        .setCommand("show_time",
+                    [&bot = m_bot, &data = m_data, keyboardWithLayout](TgBot::Message::Ptr message) {
+                        if (!data.stat) {
+                            bot.getApi().sendMessage(message->chat->id, "Sheduler is empty", nullptr, nullptr,
+                                                     keyboardWithLayout);
+                            return;
+                        }
+
+                        std::string msg{"in working"};
                         bot.getApi().sendMessage(message->chat->id, msg);
                     })
-
-        .setCommand("stat",
-                    [&bot = m_bot, keyboardOneCol](TgBot::Message::Ptr message) {
-                        bot.getApi().sendMessage(message->chat->id,
-                                                 "choose option",
-                                                 nullptr, nullptr, keyboardOneCol);
-                    })
-
         .build();
 
+    m_bot.getEvents().onNonCommandMessage(
+        [&bot = m_bot, &data = m_data, &context = m_context, keyboardWithLayout](TgBot::Message::Ptr message) {
+            printf("Get message: %s\n", message->text.c_str());
 
-    m_bot.getEvents().onNonCommandMessage([&bot = m_bot, &data = m_data, &test_text_state = m_test_text_state,
-                                    &bot_commands = m_bot_commands](TgBot::Message::Ptr message) {
-        printf("Get message: %s\n", message->text.c_str());
-
-        if (test_text_state) {
-            printf("Add word: %s\n", message->text.c_str());
-            data.words.push_back(message->text);
-            bot.getApi().sendMessage(message->chat->id, "ok");
-            test_text_state = false;
-            return;
-        }
-
-        for (const auto& command : bot_commands) {
-            if ("/" + command == message->text) {
+            if (context.isWaitingWordToDictionary) {
+                printf("Add word: %s\n", message->text.c_str());
+                data.words.push_back(message->text);
+                bot.getApi().sendMessage(message->chat->id, "ok", nullptr, nullptr, keyboardWithLayout);
+                context.isWaitingWordToDictionary = false;
                 return;
             }
-        }
 
-        bot.getApi().sendMessage(message->chat->id, "unknown command");
-    });
+            if (context.isWaitingTime) {
+                printf("Add time: %s\n", message->text.c_str());
+                // data.words.push_back(message->text);
+                bot.getApi().sendMessage(message->chat->id, "ok", nullptr, nullptr, keyboardWithLayout);
+                context.isWaitingTime = false;
+                return;
+            }
+
+            for (const auto& command : context.m_bot_commands) {
+                if ("/" + command == message->text) {
+                    return;
+                }
+            }
+
+            bot.getApi().sendMessage(message->chat->id, "unknown command");
+        });
 
     return true;
 }
