@@ -1,5 +1,24 @@
 #include "BotEntity.h"
 
+#include "CommandBuilder.h"
+#include "tgbot/EventBroadcaster.h"
+
+namespace {
+
+void createOneColumnKeyboard(const std::vector<std::string>& buttonStrings, TgBot::ReplyKeyboardMarkup::Ptr& kb) {
+    for (size_t i = 0; i < buttonStrings.size(); ++i) {
+        std::vector<TgBot::KeyboardButton::Ptr> row;
+        TgBot::KeyboardButton::Ptr button(new TgBot::KeyboardButton);
+        button->text = buttonStrings[i];
+        button->requestContact = false;
+        button->requestLocation = false;
+        row.push_back(button);
+        kb->keyboard.push_back(row);
+    }
+}
+
+}  // namespace
+
 namespace core {
 
 bool BotEntity::initBot() {
@@ -8,31 +27,49 @@ bool BotEntity::initBot() {
     m_bot.getApi().deleteWebhook();
     m_bot.getApi().deleteMyCommands();
 
-    std::vector<TgBot::BotCommand::Ptr> commands;
-    TgBot::BotCommand::Ptr cmdArray(new TgBot::BotCommand);
-    cmdArray->command = "add_word";
-    cmdArray->description = "add word to dictionary";
-    commands.push_back(cmdArray);
+    TgBot::ReplyKeyboardMarkup::Ptr keyboardOneCol(new TgBot::ReplyKeyboardMarkup);
+    createOneColumnKeyboard({"show stat current month", "add time", "Option 3"}, keyboardOneCol);
 
-    cmdArray = TgBot::BotCommand::Ptr(new TgBot::BotCommand);
-    cmdArray->command = "show_words";
-    cmdArray->description = "show current dictionary";
-    commands.push_back(cmdArray);
+    CommandBuilder builder{m_bot};
 
-    m_bot.getApi().setMyCommands(commands);
+    builder
+        .setCommand("start",
+                    [&bot = m_bot](TgBot::Message::Ptr message) { bot.getApi().sendMessage(message->chat->id, "Hi!"); })
+        .setCommand("add_word",
+                    [&bot = m_bot, &test_text_state = m_test_text_state](TgBot::Message::Ptr message) {
+                        printf("Enter text log\n");
+                        bot.getApi().sendMessage(message->chat->id, "Enter text");
+                        test_text_state = true;
+                    })
 
-    m_bot.getEvents().onCommand(
-        "start", [&bot = m_bot](TgBot::Message::Ptr message) { bot.getApi().sendMessage(message->chat->id, "Hi!"); });
+        .setCommand("show_words",
+                    [&bot = m_bot, &data = m_data](TgBot::Message::Ptr message) {
+                        if (data.words.empty()) {
+                            bot.getApi().sendMessage(message->chat->id, "Dictionary is empty");
+                            return;
+                        }
 
-    m_bot.getEvents().onCommand("add_word",
-                                [&bot = m_bot, &test_text_state = m_test_text_state](TgBot::Message::Ptr message) {
-                                    printf("Enter text log");
-                                    bot.getApi().sendMessage(message->chat->id, "Enter text");
-                                    test_text_state = true;
-                                });
+                        std::string msg;
+                        for (const auto& word : data.words) {
+                            msg += word + '\n';
+                        }
+                        bot.getApi().sendMessage(message->chat->id, msg);
+                    })
 
-    m_bot.getEvents().onAnyMessage([&bot = m_bot, &data = m_data, &test_text_state = m_test_text_state,
+        .setCommand("stat",
+                    [&bot = m_bot, keyboardOneCol](TgBot::Message::Ptr message) {
+                        bot.getApi().sendMessage(message->chat->id,
+                                                 "choose option",
+                                                 nullptr, nullptr, keyboardOneCol);
+                    })
+
+        .build();
+
+
+    m_bot.getEvents().onNonCommandMessage([&bot = m_bot, &data = m_data, &test_text_state = m_test_text_state,
                                     &bot_commands = m_bot_commands](TgBot::Message::Ptr message) {
+        printf("Get message: %s\n", message->text.c_str());
+
         if (test_text_state) {
             printf("Add word: %s\n", message->text.c_str());
             data.words.push_back(message->text);
@@ -48,19 +85,6 @@ bool BotEntity::initBot() {
         }
 
         bot.getApi().sendMessage(message->chat->id, "unknown command");
-    });
-
-    m_bot.getEvents().onCommand("show_words", [&bot = m_bot, &data = m_data](TgBot::Message::Ptr message) {
-        if (data.words.empty()) {
-            bot.getApi().sendMessage(message->chat->id, "Dictionary is empty");
-            return;
-        }
-
-        std::string msg;
-        for (const auto& word : data.words) {
-            msg += word + '\n';
-        }
-        bot.getApi().sendMessage(message->chat->id, msg);
     });
 
     return true;

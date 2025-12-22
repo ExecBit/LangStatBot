@@ -6,12 +6,24 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(BUILD_TESTS "Build tests" OFF)
-add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+add_compile_options(-Wall
+    -Wextra
+    -Wpedantic
+    -Werror
+    -Wno-unused-parameter
+    -Wno-unused-value
+    -Wno-missing-field-initializers
+)
 
 #find_package(jsoncpp CONFIG REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(JSONCPP REQUIRED jsoncpp)
 #find_package(jsoncpp)
+
+#   find_program(CLANG_TIDY_EXE NAMES clang-tidy)
+#   if(CLANG_TIDY_EXE)
+#       set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
+#   endif()
 
 include(FetchContent)
 FetchContent_Declare(

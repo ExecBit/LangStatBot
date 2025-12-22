@@ -3,7 +3,9 @@
 #include <tgbot/tgbot.h>
 
 #include <memory>
+#include <string_view>
 #include "Data.h"
+#include "tgbot/EventBroadcaster.h"
 
 namespace core {
 
@@ -15,12 +17,13 @@ public:
     TgBot::TgLongPoll longPollObj();
 
 private:
+    using MessageCallback = std::function<void (const TgBot::Message::Ptr)>;
     TgBot::Bot m_bot;
     Data& m_data;
 
-    std::atomic_bool m_test_text_state{false};
+    bool m_test_text_state{false};
 
-    std::vector<std::string> m_bot_commands = {"start", "add_word", "show_words"};
+    std::vector<std::string> m_bot_commands = {"start", "add_word", "show_words", "stat", "layout"};
 };
 
 };  // namespace core
