@@ -4,6 +4,8 @@
 
 #include <memory>
 #include <string_view>
+#include <unordered_map>
+
 #include "Data.h"
 #include "tgbot/EventBroadcaster.h"
 
@@ -25,11 +27,28 @@ public:
     TgBot::TgLongPoll longPollObj();
 
 private:
-    using MessageCallback = std::function<void (const TgBot::Message::Ptr)>;
+    using MessageCallback = std::function<void(const TgBot::Message::Ptr)>;
     TgBot::Bot m_bot;
     Data& m_data;
 
     BotContext m_context;
+
+    enum class Command : uint32_t { addWord, showWord, addTime, showTime, unknown };
+
+    struct pair {
+        std::string_view key;
+        Command value;
+    };
+
+    static constexpr std::array commands = {pair{"add word", Command::addWord}, pair{"show words", Command::showWord},
+                                            pair{"add time", Command::addTime}, pair{"show time", Command::showTime}};
+
+    constexpr std::optional<Command> parseCommand(std::string_view s) {
+        for (const auto& e : commands) {
+            if (e.key == s) return e.value;
+        }
+        return std::nullopt;
+    }
 };
 
 };  // namespace core
