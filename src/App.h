@@ -19,7 +19,7 @@ public:
     explicit App(std::string_view token, std::unique_ptr<io_interface::IDataManager> ptr)
         : m_bot{std::move(token), m_data}
         , m_dataMgr{std::move(ptr)} {}
-    bool initBot();
+    bool init(std::string_view path);
 
     void start();
 

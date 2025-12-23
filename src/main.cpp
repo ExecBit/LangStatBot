@@ -14,6 +14,7 @@ class DataManager;
 };
 
 int main() {
+    const auto sl = std::source_location::current();
     std::string token;
     if (const auto env = getenv("TOKEN"); !env) {
         std::cout << "FATAL! Token not found\n";
@@ -25,8 +26,10 @@ int main() {
 
     core::App app{token, std::make_unique<io_interface::DataManager>()};
 
-    if (!app.initBot()) {
+    if (!app.init("./data.json")) {
         std::cout << "FATAL!\n";
+
+        std::cerr << "Error: " << sl.file_name() << ":" << sl.line() << "'\n";
         return 1;
     }
 

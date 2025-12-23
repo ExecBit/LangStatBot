@@ -10,7 +10,21 @@ void sigint_handler(int signal) {
 
 namespace core {
 
-bool App::initBot() { return m_bot.initBot(); }
+bool App::init(std::string_view path) {
+    if (!m_bot.initBot()) {
+        return false;
+    };
+
+    if (!m_dataMgr->load(path)) {
+        return false;
+    }
+
+    if (!m_dataMgr->fill(m_data)) {
+        return false;
+    }
+
+    return true;
+}
 
 void App::start() {
     try {
@@ -20,9 +34,9 @@ void App::start() {
             longPoll.start();
         }
     } catch (std::exception& e) {
-        printf("error: %s\n", e.what());
+        printf("EXCEPTION: %s\n", e.what());
     } catch (...) {
-        printf("FATAL!\n");
+        printf("FATAL EXCEPTION!\n");
     }
 }
 

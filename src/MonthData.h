@@ -1,17 +1,19 @@
 #pragma once
 
-#include <map>
+#include <unordered_map>
 
 namespace core {
 
 class MonthData {
 private:
-    std::map<int, int> day_to_minutes;  // день -> минуты
+    std::unordered_map<int, int> day_to_minutes;  // день -> минуты
     int month_number;                    // номер месяца (1-12)
     int days_in_month;                  // количество дней в месяце
 
 public:
+    MonthData() = default;
     MonthData(int month, int year = 2024);
+    MonthData(std::unordered_map<int, int> map) : day_to_minutes(std::move(map)) {};
 
     // Добавить минуты для конкретного дня
     void addMinutes(int day, int minutes);
@@ -36,7 +38,7 @@ public:
     }
 
     // Получить все дни с данными
-    std::map<int, int> getAllDays() const {
+    std::unordered_map<int, int> getAllDays() const {
         return day_to_minutes;
     }
 
