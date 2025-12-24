@@ -15,6 +15,7 @@ add_compile_options(-Wall
     -Wno-missing-field-initializers
 )
 
+find_package(spdlog REQUIRED)
 #   find_program(CLANG_TIDY_EXE NAMES clang-tidy)
 #   if(CLANG_TIDY_EXE)
 #       set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
@@ -49,6 +50,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         TgBot
         nlohmann_json
+        spdlog::spdlog_header_only
 )
 
 if(BUILD_TESTS)

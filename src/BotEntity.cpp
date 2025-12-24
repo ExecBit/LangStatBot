@@ -2,6 +2,7 @@
 
 #include "CommandBuilder.h"
 #include "tgbot/EventBroadcaster.h"
+#include "logger/Logger.h"
 
 namespace {
 
@@ -27,7 +28,8 @@ void createKeyboard(const vector<vector<string>>& buttonLayout, ReplyKeyboardMar
 namespace core {
 
 bool BotEntity::initBot() {
-    printf("Bot username: %s\n", m_bot.getApi().getMe()->username.c_str());
+    SPDLOG_INFO("Bot username: {}\n", m_bot.getApi().getMe()->username.c_str());
+
 
     m_bot.getApi().deleteWebhook();
     m_bot.getApi().deleteMyCommands();
@@ -52,10 +54,10 @@ bool BotEntity::initBot() {
     m_bot.getEvents().onNonCommandMessage(
         //[&bot = m_bot, &data = m_data, &context = m_context, keyboardWithLayout](TgBot::Message::Ptr message) {
         [&, &bot = m_bot, &data = m_data, &context = m_context, keyboardWithLayout](TgBot::Message::Ptr message) {
-            printf("Get message: %s\n", message->text.c_str());
+            SPDLOG_INFO("Get message: {}", message->text);
 
             if (context.isWaitingWordToDictionary) {
-                printf("Add word: %s\n", message->text.c_str());
+                SPDLOG_INFO("Add word: {}", message->text);
                 data.stat->words.push_back(message->text);
                 bot.getApi().sendMessage(message->chat->id, "ok", nullptr, nullptr, keyboardWithLayout);
                 context.isWaitingWordToDictionary = false;
@@ -63,7 +65,7 @@ bool BotEntity::initBot() {
             }
 
             if (context.isWaitingTime) {
-                printf("Add time: %s\n", message->text.c_str());
+                SPDLOG_INFO("Add time: {}", message->text);
                 // data.words.push_back(message->text);
                 bot.getApi().sendMessage(message->chat->id, "ok", nullptr, nullptr, keyboardWithLayout);
                 context.isWaitingTime = false;
@@ -118,7 +120,7 @@ bool BotEntity::initBot() {
             bot.getApi().sendMessage(message->chat->id, "unknown command", nullptr, nullptr, keyboardWithLayout);
         });
 
-    printf("Bot init succeess\n");
+    SPDLOG_INFO("Bot init succeess");
     return true;
 }
 

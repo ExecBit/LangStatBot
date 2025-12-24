@@ -6,6 +6,7 @@
 
 #include "../Data.h"
 #include "../MonthData.h"
+#include "../logger/Logger.h"
 
 namespace core {
 
@@ -73,24 +74,25 @@ void from_json(const json& j, core::Statistic& s) {
 namespace serialization {
 
 bool JsonSerializer::deserialize(const std::string& src, core::Data& dst) const {
+    SPDLOG_INFO("Start deserialize from json");
     auto j = nlohmann::json::parse(src);
     //auto stat = j.get<core::Statistic>();
 
     dst.stat = std::make_unique<core::Statistic>(j.get<core::Statistic>());
     //dst.stat = std::move(stat);
 
-    printf("Serialize json data succeess\n");
+    SPDLOG_INFO("Deserialize from json is success");
     return true;
 }
 
 bool JsonSerializer::serialize(const core::Data& src, std::string& dst) const {
+    SPDLOG_INFO("Start serialize to json");
     core::Statistic stat = *src.stat.get();
     nlohmann::json out = stat;
     // dst << out.dump(2).append(dst);
     dst.clear();
     dst.append(out.dump(2));
-    std::cout << "\nSerialized back to JSON:\n";
-
+    SPDLOG_INFO("Serialize to json is success");
     return true;
 }
 

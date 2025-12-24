@@ -1,17 +1,13 @@
 #include "DataManager.h"
 
-#include <fstream>
-#include <iostream>
 #include <memory>
-#include <optional>
-#include <source_location>
-
 #include "Data.h"
-#include "MonthData.h"
+#include "logger/Logger.h"
 
 namespace io_interface {
 
 bool DataManager::load(std::string_view src, core::Data& dst) {
+    SPDLOG_INFO("Start load data");
     std::string rawData;
     if (!m_storage->read(src, rawData)) {
         return false;
@@ -24,11 +20,12 @@ bool DataManager::load(std::string_view src, core::Data& dst) {
 
     dst = std::move(data);
 
-    printf("Load data succeess\n");
+    SPDLOG_INFO("Load data succeess");
     return true;
 }
 
 bool DataManager::save(const core::Data& src, std::string_view path) {
+    SPDLOG_INFO("Start save data");
     std::string rawData;
     if (!m_serializer->serialize(src, rawData)) {
         return false;
@@ -38,6 +35,7 @@ bool DataManager::save(const core::Data& src, std::string_view path) {
         return false;
     }
 
+    SPDLOG_INFO("Save data succeess");
     return true;
 }
 

@@ -11,6 +11,7 @@ public:
     explicit DataManager(std::unique_ptr<IStorage> storage, std::unique_ptr<serialization::ISerializer> serializer)
         : m_storage(std::move(storage))
         , m_serializer(std::move(serializer)) {}
+    //TODO корректно читать файл при старте
     bool load(std::string_view src, core::Data& dst) override;
     bool save(const core::Data& src, std::string_view path) override;
 

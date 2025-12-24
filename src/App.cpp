@@ -1,10 +1,10 @@
 #include "App.h"
+#include "logger/Logger.h"
 
 namespace {
 volatile std::sig_atomic_t gStopProceedLoop{0};
 }
 void sigint_handler(int signal) {
-    printf("STOP LOOP\n");
     gStopProceedLoop = signal;
 }
 
@@ -23,16 +23,21 @@ bool App::init(std::string_view path) {
 }
 
 void App::start() {
+    std::signal(SIGINT, sigint_handler);
+
     try {
         auto longPoll = m_bot.longPollObj();
         while (!gStopProceedLoop) {
-            printf("Long poll started\n");
+            SPDLOG_INFO("Long poll started");
             longPoll.start();
         }
+        SPDLOG_WARN("STOP LOOP");
+
+        m_dataMgr->save(m_data, "./data.json");
     } catch (std::exception& e) {
-        printf("EXCEPTION: %s\n", e.what());
+        SPDLOG_ERROR("EXCEPTION: %s\n", e.what());
     } catch (...) {
-        printf("FATAL EXCEPTION!\n");
+        SPDLOG_ERROR("FATAL EXCEPTION!");
     }
 }
 
