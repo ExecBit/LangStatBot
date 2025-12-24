@@ -15,11 +15,6 @@ add_compile_options(-Wall
     -Wno-missing-field-initializers
 )
 
-#find_package(jsoncpp CONFIG REQUIRED)
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(JSONCPP REQUIRED jsoncpp)
-#find_package(jsoncpp)
-
 #   find_program(CLANG_TIDY_EXE NAMES clang-tidy)
 #   if(CLANG_TIDY_EXE)
 #       set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
@@ -32,6 +27,13 @@ FetchContent_Declare(
     GIT_TAG master
 )
 FetchContent_MakeAvailable(tgbot-cpp)
+
+FetchContent_Declare(
+    nlohmann_json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG master
+)
+FetchContent_MakeAvailable(nlohmann_json)
 
 add_executable(lang_time_tracker_bot)
 
@@ -46,7 +48,7 @@ target_sources(lang_time_tracker_bot
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         TgBot
-        jsoncpp
+        nlohmann_json
 )
 
 if(BUILD_TESTS)

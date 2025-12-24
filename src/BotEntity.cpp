@@ -56,7 +56,7 @@ bool BotEntity::initBot() {
 
             if (context.isWaitingWordToDictionary) {
                 printf("Add word: %s\n", message->text.c_str());
-                data.words.push_back(message->text);
+                data.stat->words.push_back(message->text);
                 bot.getApi().sendMessage(message->chat->id, "ok", nullptr, nullptr, keyboardWithLayout);
                 context.isWaitingWordToDictionary = false;
                 return;
@@ -77,14 +77,14 @@ bool BotEntity::initBot() {
                         context.isWaitingWordToDictionary = true;
                     }; break;
                     case Command::showWord: {
-                        if (data.words.empty()) {
+                        if (data.stat->words.empty()) {
                             bot.getApi().sendMessage(message->chat->id, "Dictionary is empty", nullptr, nullptr,
                                                      keyboardWithLayout);
                             return;
                         }
 
                         std::string msg;
-                        for (const auto& word : data.words) {
+                        for (const auto& word : data.stat->words) {
                             msg += word + '\n';
                         }
                         bot.getApi().sendMessage(message->chat->id, msg, nullptr, nullptr, keyboardWithLayout);

@@ -38,15 +38,15 @@ MonthData::MonthData(int month, int year) : month_number(month) {
 
 void MonthData::addMinutes(int day, int minutes) {
     validateDay(day);
-    day_to_minutes[day] += minutes;
+    days[day] += minutes;
 }
 
 // Получить минуты для конкретного дня
 int MonthData::getMinutes(int day) const {
     validateDay(day);
 
-    auto it = day_to_minutes.find(day);
-    if (it != day_to_minutes.end()) {
+    auto it = days.find(day);
+    if (it != days.end()) {
         return it->second;
     }
     return 0;  // Если день не найден, возвращаем 0
@@ -58,16 +58,16 @@ void MonthData::setMinutes(int day, int minutes) {
 
     if (minutes == 0) {
         // Удаляем запись если минуты = 0
-        day_to_minutes.erase(day);
+        days.erase(day);
     } else {
-        day_to_minutes[day] = minutes;
+        days[day] = minutes;
     }
 }
 
 // Получить общее количество минут за месяц
 int MonthData::getTotalMinutes() const {
     int total = 0;
-    for (const auto& [day, minutes] : day_to_minutes) {
+    for (const auto& [day, minutes] : days) {
         total += minutes;
     }
     return total;
@@ -75,10 +75,10 @@ int MonthData::getTotalMinutes() const {
 
 // Получить среднее количество минут в день (только для дней с данными)
 double MonthData::getAverageMinutes() const {
-    if (day_to_minutes.empty()) {
+    if (days.empty()) {
         return 0.0;
     }
-    return static_cast<double>(getTotalMinutes()) / day_to_minutes.size();
+    return static_cast<double>(getTotalMinutes()) / days.size();
 }
 
 void MonthData::validateDay(int day) const {

@@ -10,30 +10,25 @@
 
 namespace core {
 
-struct MonthStatMetadata {
-    MonthStatMetadata() = default;
-    size_t required{0};
-    size_t current{0};
-    size_t surplus{0};
-    size_t shortage{0};
+struct MonthMetadata {
+    int required{};
+    int current{};
+    int surplus{};
+    int shortage{};
 };
 
 struct MonthStat {
-    MonthStat() = default;
-    MonthStatMetadata metadata;
-    MonthData month;
+    MonthMetadata metadata;
+    std::unordered_map<int, int> days;  // day -> minutes
+    //MonthData month;
 };
 
 struct Statistic {
-    size_t total{0};
-    // std::list<MonthStat> months;
-    using mapMonth = std::unordered_map<size_t, MonthStat>;
-    std::vector<mapMonth> years;
-    // std::unordered_map<size_t, MonthStat> months;
+    std::vector<std::string> words;
+    std::unordered_map<int, std::unordered_map<int, MonthStat>> years;
 };
 
 struct Data {
-    std::list<std::string> words;
     std::unique_ptr<Statistic> stat;
 };
 

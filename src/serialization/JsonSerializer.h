@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ISerializer.h"
-#include <json/json.h>
 
 namespace serialization {
 

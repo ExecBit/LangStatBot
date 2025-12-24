@@ -28,16 +28,17 @@ bool DataManager::load(std::string_view src, core::Data& dst) {
     return true;
 }
 
-bool DataManager::save(std::string_view file, std::string_view path) {
-    Json::Value root;
-    Json::StreamWriterBuilder builder;
-    const std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+bool DataManager::save(const core::Data& src, std::string_view path) {
+    std::string rawData;
+    if (!m_serializer->serialize(src, rawData)) {
+        return false;
+    }
 
-    std::ofstream ofs{path.data()};
-    root["Data"] = file.data();
-    writer->write(root, &ofs);
+    if (!m_storage->write(path, rawData)) {
+        return false;
+    }
 
-    return EXIT_SUCCESS;
+    return true;
 }
 
 };  // namespace io_interface

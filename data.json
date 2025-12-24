@@ -1,0 +1,30 @@
+{
+  "words": ["fuck", "cunt", "think", "idontknow"],
+  "2025": {
+    "12": {
+      "metadata": {
+        "required": 140,
+        "current": 234,
+        "surplus": 0,
+        "shortage": 98
+      },
+      "days": {
+        "1": 120,
+        "5": 200,
+        "24": 0
+      }
+    },
+    "11": {
+      "metadata": {
+        "required": 140,
+        "current": 34,
+        "surplus": 10,
+        "shortage": 0
+      },
+      "days": {
+        "3": 150,
+        "17": 90
+      }
+    }
+  }
+}
