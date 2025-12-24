@@ -14,7 +14,13 @@ namespace core {
 struct BotContext {
     bool isWaitingWordToDictionary{false};
     bool isWaitingStatOption{false};
-    bool isWaitingTime{false};
+    bool isWaitingMonthNumber{false};
+    bool isWaitingDayNumber{false};
+    bool isWaitingMinutes{false};
+    bool isWaitingShowtime{false};
+
+    int monthNumber{};
+    int dayNumber{};
 
     std::vector<std::string> m_bot_commands = {"start", "add_word", "show_words", "stat", "layout"};
 };

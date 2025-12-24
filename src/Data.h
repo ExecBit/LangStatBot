@@ -1,8 +1,11 @@
 #pragma once
 
+#include <iomanip>
 #include <list>
 #include <map>
 #include <memory>
+#include <sstream>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -20,7 +23,21 @@ struct MonthMetadata {
 struct MonthStat {
     MonthMetadata metadata;
     std::unordered_map<int, int> days;  // day -> minutes
-    //MonthData month;
+
+    std::string print() const {
+        std::stringstream ss;
+        ss << std::left << "required:" << std::setw(10) << metadata.required << '\n'
+           << "current:" << std::setw(10) << metadata.current << '\n'
+           << "surplus:" << std::setw(10) << metadata.surplus << '\n'
+           << "shortage:" << std::setw(10) << metadata.shortage << '\n';
+
+        for (const auto& [day, minutes] : days) {
+            ss << day << std::setw(10) << " - " << minutes << '\n';
+        }
+
+        return ss.str();
+    }
+    // MonthData month;
 };
 
 struct Statistic {

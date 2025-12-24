@@ -1,8 +1,10 @@
 #include "BotEntity.h"
 
+#include <string>
+
 #include "CommandBuilder.h"
-#include "tgbot/EventBroadcaster.h"
 #include "logger/Logger.h"
+#include "tgbot/EventBroadcaster.h"
 
 namespace {
 
@@ -30,12 +32,19 @@ namespace core {
 bool BotEntity::initBot() {
     SPDLOG_INFO("Bot username: {}\n", m_bot.getApi().getMe()->username.c_str());
 
-
     m_bot.getApi().deleteWebhook();
     m_bot.getApi().deleteMyCommands();
 
     ReplyKeyboardMarkup::Ptr keyboardWithLayout(new ReplyKeyboardMarkup);
-    createKeyboard({{"ping", "add word"}, {"show words", "add time", "show time"}}, keyboardWithLayout);
+    createKeyboard({{"add word", "add time"}, {"show words", "show time"}}, keyboardWithLayout);
+
+    ReplyKeyboardMarkup::Ptr keyboardChooseMonth(new ReplyKeyboardMarkup);
+    createKeyboard(
+        {
+            {"1", "2", "3", "4", "5", "6"},
+            {"7", "8", "9", "10", "11", "12"},
+        },
+        keyboardChooseMonth);
 
     CommandBuilder builder{m_bot};
 
@@ -53,7 +62,8 @@ bool BotEntity::initBot() {
 
     m_bot.getEvents().onNonCommandMessage(
         //[&bot = m_bot, &data = m_data, &context = m_context, keyboardWithLayout](TgBot::Message::Ptr message) {
-        [&, &bot = m_bot, &data = m_data, &context = m_context, keyboardWithLayout](TgBot::Message::Ptr message) {
+        [&, &bot = m_bot, &data = m_data, &context = m_context, keyboardWithLayout,
+         keyboardChooseMonth](TgBot::Message::Ptr message) {
             SPDLOG_INFO("Get message: {}", message->text);
 
             if (context.isWaitingWordToDictionary) {
@@ -64,11 +74,56 @@ bool BotEntity::initBot() {
                 return;
             }
 
-            if (context.isWaitingTime) {
-                SPDLOG_INFO("Add time: {}", message->text);
+            if (context.isWaitingMonthNumber) {
+                SPDLOG_INFO("Add month number: {}", message->text);
                 // data.words.push_back(message->text);
+                bot.getApi().sendMessage(message->chat->id, "choose day", nullptr, nullptr, keyboardChooseMonth);
+
+                context.monthNumber = stoi(message->text);
+                context.isWaitingMonthNumber = false;
+                context.isWaitingDayNumber = true;
+                return;
+            }
+
+            if (context.isWaitingDayNumber) {
+                SPDLOG_INFO("Add day: {}", message->text);
+
+                bot.getApi().sendMessage(message->chat->id, "choose mount of minutes");
+
+                context.dayNumber = stoi(message->text);
+                context.isWaitingDayNumber = false;
+                context.isWaitingMinutes = true;
+                return;
+            }
+
+            if (context.isWaitingMinutes) {
+                SPDLOG_INFO("Add time {} to date {}.{}", message->text, context.monthNumber, context.dayNumber);
+
+                m_data.stat->years.at(2025).at(context.monthNumber).days[context.dayNumber] = stoi(message->text);
+
                 bot.getApi().sendMessage(message->chat->id, "ok", nullptr, nullptr, keyboardWithLayout);
-                context.isWaitingTime = false;
+                //              if (const auto res = m_data.stat->years.at(2025)
+                //                                       .at(context.monthNumber)
+                //                                       .days.insert_or_assign(context.dayNumber, stoi(message->text));
+                //                  res.second) {
+                //                  bot.getApi().sendMessage(message->chat->id, "ok", nullptr, nullptr,
+                //                  keyboardWithLayout);
+                //              } else {
+                //                  bot.getApi().sendMessage(message->chat->id, "Error, value is not assign", nullptr,
+                //                  nullptr,
+                //                                           keyboardWithLayout);
+                //              }
+                context.isWaitingMinutes = false;
+                return;
+            }
+
+            if (context.isWaitingShowtime) {
+                SPDLOG_INFO("Got Month number {}", message->text);
+
+                const auto& monthStat = m_data.stat->years.at(2025).at(stoi(message->text));
+
+                bot.getApi().sendMessage(message->chat->id, monthStat.print(), nullptr, nullptr, keyboardWithLayout);
+                context.isWaitingShowtime = false;
                 return;
             }
 
@@ -92,8 +147,8 @@ bool BotEntity::initBot() {
                         bot.getApi().sendMessage(message->chat->id, msg, nullptr, nullptr, keyboardWithLayout);
                     }; break;
                     case Command::addTime: {
-                        bot.getApi().sendMessage(message->chat->id, "Enter text");
-                        context.isWaitingTime = true;
+                        bot.getApi().sendMessage(message->chat->id, "Enter month number");
+                        context.isWaitingMonthNumber = true;
                     }; break;
                     case Command::showTime: {
                         if (!data.stat) {
@@ -102,8 +157,8 @@ bool BotEntity::initBot() {
                             return;
                         }
 
-                        std::string msg{"in working"};
-                        bot.getApi().sendMessage(message->chat->id, msg, nullptr, nullptr, keyboardWithLayout);
+                        bot.getApi().sendMessage(message->chat->id, "Enter month number", nullptr, nullptr, keyboardChooseMonth);
+                        context.isWaitingShowtime = true;
                     } break;
                     case Command::unknown: {
                     }; break;

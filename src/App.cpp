@@ -35,7 +35,7 @@ void App::start() {
 
         m_dataMgr->save(m_data, "./data.json");
     } catch (std::exception& e) {
-        SPDLOG_ERROR("EXCEPTION: %s\n", e.what());
+        SPDLOG_ERROR("EXCEPTION: {}", e.what());
     } catch (...) {
         SPDLOG_ERROR("FATAL EXCEPTION!");
     }
