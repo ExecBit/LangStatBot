@@ -8,6 +8,9 @@
 
 #include "App.h"
 #include "DataManager.h"
+#include "IStorage.h"
+#include "Storage.h"
+#include "serialization/JsonSerializer.h"
 
 namespace io_interface {
 class DataManager;
@@ -24,7 +27,10 @@ int main() {
     }
     printf("Token: %s\n", token.c_str());
 
-    core::App app{token, std::make_unique<io_interface::DataManager>()};
+    auto dataMgr = std::make_unique<io_interface::DataManager>(std::make_unique<io_interface::Storage>(),
+                                                               std::make_unique<serialization::JsonSerializer>());
+
+    core::App app{token, std::move(dataMgr)};
 
     if (!app.init("./data.json")) {
         std::cout << "FATAL!\n";

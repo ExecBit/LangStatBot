@@ -15,11 +15,7 @@ bool App::init(std::string_view path) {
         return false;
     };
 
-    if (!m_dataMgr->load(path)) {
-        return false;
-    }
-
-    if (!m_dataMgr->fill(m_data)) {
+    if (!m_dataMgr->load(path, m_data)) {
         return false;
     }
 
