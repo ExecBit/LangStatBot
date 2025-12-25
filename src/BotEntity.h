@@ -9,25 +9,13 @@
 #include "Data.h"
 #include "tgbot/EventBroadcaster.h"
 
+#include "fsm/StateMachine.h"
+
 namespace core {
-
-struct BotContext {
-    bool isWaitingWordToDictionary{false};
-    bool isWaitingStatOption{false};
-    bool isWaitingMonthNumber{false};
-    bool isWaitingDayNumber{false};
-    bool isWaitingMinutes{false};
-    bool isWaitingShowtime{false};
-
-    int monthNumber{};
-    int dayNumber{};
-
-    std::vector<std::string> m_bot_commands = {"start", "add_word", "show_words", "stat", "layout"};
-};
 
 class BotEntity {
 public:
-    explicit BotEntity(std::string_view token, Data& data) : m_bot{std::string{token}}, m_data{data} {}
+    explicit BotEntity(std::string_view token, Data& data) : m_bot{std::string{token}}, m_data{data}, m_handler(m_bot, m_data) {}
 
     bool initBot();
     TgBot::TgLongPoll longPollObj();
@@ -37,24 +25,8 @@ private:
     TgBot::Bot m_bot;
     Data& m_data;
 
-    BotContext m_context;
+    fsm::StateMachine m_handler;
 
-    enum class Command : uint32_t { addWord, showWord, addTime, showTime, unknown };
-
-    struct pair {
-        std::string_view key;
-        Command value;
-    };
-
-    static constexpr std::array commands = {pair{"add word", Command::addWord}, pair{"show words", Command::showWord},
-                                            pair{"add time", Command::addTime}, pair{"show time", Command::showTime}};
-
-    constexpr std::optional<Command> parseCommand(std::string_view s) {
-        for (const auto& e : commands) {
-            if (e.key == s) return e.value;
-        }
-        return std::nullopt;
-    }
 };
 
 };  // namespace core

@@ -2,30 +2,31 @@
 
 #include <string>
 
+#include "Command.h"
 #include "CommandBuilder.h"
 #include "logger/Logger.h"
 #include "tgbot/EventBroadcaster.h"
 
-namespace {
+//  namespace {
 
-using namespace std;
-using namespace TgBot;
+//  using namespace std;
+//  using namespace TgBot;
 
-void createKeyboard(const vector<vector<string>>& buttonLayout, ReplyKeyboardMarkup::Ptr& kb) {
-    for (size_t i = 0; i < buttonLayout.size(); ++i) {
-        vector<KeyboardButton::Ptr> row;
-        for (size_t j = 0; j < buttonLayout[i].size(); ++j) {
-            KeyboardButton::Ptr button(new KeyboardButton);
-            button->text = buttonLayout[i][j];
-            button->requestContact = false;
-            button->requestLocation = false;
-            row.push_back(button);
-        }
-        kb->keyboard.push_back(row);
-    }
-}
+//  void createKeyboard(const vector<vector<string>>& buttonLayout, ReplyKeyboardMarkup::Ptr& kb) {
+//      for (size_t i = 0; i < buttonLayout.size(); ++i) {
+//          vector<KeyboardButton::Ptr> row;
+//          for (size_t j = 0; j < buttonLayout[i].size(); ++j) {
+//              KeyboardButton::Ptr button(new KeyboardButton);
+//              button->text = buttonLayout[i][j];
+//              button->requestContact = false;
+//              button->requestLocation = false;
+//              row.push_back(button);
+//          }
+//          kb->keyboard.push_back(row);
+//      }
+//  }
 
-}  // namespace
+//  }  // namespace
 
 namespace core {
 
@@ -61,120 +62,8 @@ bool BotEntity::initBot() {
         .build();
 
     m_bot.getEvents().onNonCommandMessage(
-        //[&bot = m_bot, &data = m_data, &context = m_context, keyboardWithLayout](TgBot::Message::Ptr message) {
-        [&, &bot = m_bot, &data = m_data, &context = m_context, keyboardWithLayout,
-         keyboardChooseMonth](TgBot::Message::Ptr message) {
-            SPDLOG_INFO("Get message: {}", message->text);
-
-            if (context.isWaitingWordToDictionary) {
-                SPDLOG_INFO("Add word: {}", message->text);
-                data.stat->words.push_back(message->text);
-                bot.getApi().sendMessage(message->chat->id, "ok", nullptr, nullptr, keyboardWithLayout);
-                context.isWaitingWordToDictionary = false;
-                return;
-            }
-
-            if (context.isWaitingMonthNumber) {
-                SPDLOG_INFO("Add month number: {}", message->text);
-                // data.words.push_back(message->text);
-                bot.getApi().sendMessage(message->chat->id, "choose day", nullptr, nullptr, keyboardChooseMonth);
-
-                context.monthNumber = stoi(message->text);
-                context.isWaitingMonthNumber = false;
-                context.isWaitingDayNumber = true;
-                return;
-            }
-
-            if (context.isWaitingDayNumber) {
-                SPDLOG_INFO("Add day: {}", message->text);
-
-                bot.getApi().sendMessage(message->chat->id, "choose mount of minutes");
-
-                context.dayNumber = stoi(message->text);
-                context.isWaitingDayNumber = false;
-                context.isWaitingMinutes = true;
-                return;
-            }
-
-            if (context.isWaitingMinutes) {
-                SPDLOG_INFO("Add time {} to date {}.{}", message->text, context.monthNumber, context.dayNumber);
-
-                m_data.stat->years.at(2025).at(context.monthNumber).days[context.dayNumber] += stoi(message->text);
-
-                std::string res{"Value is added, current state: "};
-                res += std::to_string(context.dayNumber) + " : " + message->text;
-                bot.getApi().sendMessage(message->chat->id, res, nullptr, nullptr, keyboardWithLayout);
-                //              if (const auto res = m_data.stat->years.at(2025)
-                //                                       .at(context.monthNumber)
-                //                                       .days.insert_or_assign(context.dayNumber, stoi(message->text));
-                //                  res.second) {
-                //                  bot.getApi().sendMessage(message->chat->id, "ok", nullptr, nullptr,
-                //                  keyboardWithLayout);
-                //              } else {
-                //                  bot.getApi().sendMessage(message->chat->id, "Error, value is not assign", nullptr,
-                //                  nullptr,
-                //                                           keyboardWithLayout);
-                //              }
-                context.isWaitingMinutes = false;
-                return;
-            }
-
-            if (context.isWaitingShowtime) {
-                SPDLOG_INFO("Got Month number {}", message->text);
-
-                const auto& monthStat = m_data.stat->years.at(2025).at(stoi(message->text));
-
-                bot.getApi().sendMessage(message->chat->id, monthStat.print(), nullptr, nullptr, keyboardWithLayout);
-                context.isWaitingShowtime = false;
-                return;
-            }
-
-            if (const auto command = parseCommand(message->text); command) {
-                switch (command.value()) {
-                    case Command::addWord: {
-                        bot.getApi().sendMessage(message->chat->id, "Enter text");
-                        context.isWaitingWordToDictionary = true;
-                    }; break;
-                    case Command::showWord: {
-                        if (data.stat->words.empty()) {
-                            bot.getApi().sendMessage(message->chat->id, "Dictionary is empty", nullptr, nullptr,
-                                                     keyboardWithLayout);
-                            return;
-                        }
-
-                        std::string msg;
-                        for (const auto& word : data.stat->words) {
-                            msg += word + '\n';
-                        }
-                        bot.getApi().sendMessage(message->chat->id, msg, nullptr, nullptr, keyboardWithLayout);
-                    }; break;
-                    case Command::addTime: {
-                        bot.getApi().sendMessage(message->chat->id, "Enter month number", nullptr, nullptr, keyboardChooseMonth);
-                        context.isWaitingMonthNumber = true;
-                    }; break;
-                    case Command::showTime: {
-                        if (!data.stat) {
-                            bot.getApi().sendMessage(message->chat->id, "Sheduler is empty", nullptr, nullptr,
-                                                     keyboardWithLayout);
-                            return;
-                        }
-
-                        bot.getApi().sendMessage(message->chat->id, "Enter month number", nullptr, nullptr, keyboardChooseMonth);
-                        context.isWaitingShowtime = true;
-                    } break;
-                    case Command::unknown: {
-                    }; break;
-                }
-                return;
-            }
-
-            for (const auto& command : context.m_bot_commands) {
-                if ("/" + command == message->text) {
-                    return;
-                }
-            }
-
-            bot.getApi().sendMessage(message->chat->id, "unknown command", nullptr, nullptr, keyboardWithLayout);
+        [&](TgBot::Message::Ptr message) {
+            m_handler.execute(message);
         });
 
     SPDLOG_INFO("Bot init succeess");
