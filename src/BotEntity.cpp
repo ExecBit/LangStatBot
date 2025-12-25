@@ -99,9 +99,11 @@ bool BotEntity::initBot() {
             if (context.isWaitingMinutes) {
                 SPDLOG_INFO("Add time {} to date {}.{}", message->text, context.monthNumber, context.dayNumber);
 
-                m_data.stat->years.at(2025).at(context.monthNumber).days[context.dayNumber] = stoi(message->text);
+                m_data.stat->years.at(2025).at(context.monthNumber).days[context.dayNumber] += stoi(message->text);
 
-                bot.getApi().sendMessage(message->chat->id, "ok", nullptr, nullptr, keyboardWithLayout);
+                std::string res{"Value is added, current state: "};
+                res += std::to_string(context.dayNumber) + " : " + message->text;
+                bot.getApi().sendMessage(message->chat->id, res, nullptr, nullptr, keyboardWithLayout);
                 //              if (const auto res = m_data.stat->years.at(2025)
                 //                                       .at(context.monthNumber)
                 //                                       .days.insert_or_assign(context.dayNumber, stoi(message->text));
@@ -147,7 +149,7 @@ bool BotEntity::initBot() {
                         bot.getApi().sendMessage(message->chat->id, msg, nullptr, nullptr, keyboardWithLayout);
                     }; break;
                     case Command::addTime: {
-                        bot.getApi().sendMessage(message->chat->id, "Enter month number");
+                        bot.getApi().sendMessage(message->chat->id, "Enter month number", nullptr, nullptr, keyboardChooseMonth);
                         context.isWaitingMonthNumber = true;
                     }; break;
                     case Command::showTime: {
