@@ -54,6 +54,8 @@ struct ShowTimeState;
 class StateMachine {
 public:
     explicit StateMachine(TgBot::Bot& bot, core::Data& data) : context(bot, data) {
+        SPDLOG_INFO("Init");
+
         context.keyboardWithLayout = ReplyKeyboardMarkup::Ptr(new ReplyKeyboardMarkup);
         context.keyboardChooseMonth = ReplyKeyboardMarkup::Ptr(new ReplyKeyboardMarkup);
 
@@ -75,6 +77,7 @@ public:
         static_assert(std::is_base_of_v<IState, T>, "State must inherit from IDialogState");
         state = std::make_unique<T>(std::forward<Args>(args)...);
         state->onEnter(*this);
+        SPDLOG_INFO("Transition to state {}", state->name());
     }
 
     Context context;
@@ -88,13 +91,21 @@ private:
 // ================== States ==================
 
 struct IdleState : IState {
+
+    static constexpr std::string_view _name = "Idle";
+    std::string_view name() const override { return _name; }
+
     void onEnter(StateMachine& dialog) override {
+        SPDLOG_INFO("onEnter");
+
         dialog.functionExecute = [this](StateMachine& stateMachine, TgBot::Message::Ptr msg) {
             return onMessage(stateMachine, msg);
         };
     }
 
     void onMessage(StateMachine& dialog, TgBot::Message::Ptr message) {
+        SPDLOG_INFO("onMessage");
+
         if (const auto command = command::parse(message->text); command) {
             switch (command.value()) {
                 case command::Type::addWord: {
@@ -120,10 +131,15 @@ struct IdleState : IState {
 };
 
 struct AddWordState : IState {
+    static constexpr std::string_view _name = "AddWord";
+    std::string_view name() const override { return _name; }
+
     TgBot::Message::Ptr initMessage;
     AddWordState(TgBot::Message::Ptr message) : initMessage(message) {}
 
     void onEnter(StateMachine& dialog) override {
+        SPDLOG_INFO("{} - onEnter", _name);
+
         dialog.context.bot.getApi().sendMessage(initMessage->chat->id, "Enter text");
         dialog.functionExecute = [this](StateMachine& stateMachine, TgBot::Message::Ptr msg) {
             return onMessage(stateMachine, msg);
@@ -131,6 +147,8 @@ struct AddWordState : IState {
     }
 
     void onMessage(StateMachine& dialog, TgBot::Message::Ptr message) {
+        SPDLOG_INFO("{} - onMessage", _name);
+
         SPDLOG_INFO("Add word: {}", message->text);
         dialog.context.data.stat->words.push_back(message->text);
         dialog.context.bot.getApi().sendMessage(message->chat->id, "ok", nullptr, nullptr,
@@ -141,10 +159,15 @@ struct AddWordState : IState {
 };
 
 struct ShowWordState : IState {
+    static constexpr std::string_view _name = "ShowWord";
+    std::string_view name() const override { return _name; }
+
     TgBot::Message::Ptr initMessage;
     ShowWordState(TgBot::Message::Ptr message) : initMessage(message) {}
 
     void onEnter(StateMachine& dialog) override {
+        SPDLOG_INFO("{} - onEnter", _name);
+
         if (dialog.context.data.stat->words.empty()) {
             dialog.context.bot.getApi().sendMessage(initMessage->chat->id, "Dictionary is empty", nullptr, nullptr,
                                                     dialog.context.keyboardWithLayout);
@@ -163,10 +186,15 @@ struct ShowWordState : IState {
 };
 
 struct AddTimeState : IState {
+    static constexpr std::string_view _name = "AddTime";
+    std::string_view name() const override { return _name; }
+
     TgBot::Message::Ptr initMessage;
     AddTimeState(TgBot::Message::Ptr message) : initMessage(message) {}
 
     void onEnter(StateMachine& dialog) override {
+        SPDLOG_INFO("{} - onEnter", _name);
+
         dialog.context.bot.getApi().sendMessage(initMessage->chat->id, "Enter month number", nullptr, nullptr,
                                                 dialog.context.keyboardChooseMonth);
 
@@ -176,6 +204,8 @@ struct AddTimeState : IState {
     }
 
     void onWaitingMonthNumber(StateMachine& dialog, TgBot::Message::Ptr message) {
+        SPDLOG_INFO("{} - onWaitingMonthNumber", _name);
+
         SPDLOG_INFO("Add month number: {}", message->text);
         dialog.context.bot.getApi().sendMessage(message->chat->id, "choose day");
 
@@ -187,6 +217,7 @@ struct AddTimeState : IState {
     }
 
     void onWaitingDayNumber(StateMachine& dialog, TgBot::Message::Ptr message) {
+        SPDLOG_INFO("{} - onWaitingDayNumber", _name);
         SPDLOG_INFO("Add day: {}", message->text);
 
         dialog.context.bot.getApi().sendMessage(message->chat->id, "choose mount of minutes");
@@ -198,6 +229,7 @@ struct AddTimeState : IState {
     }
 
     void onWaitingMinutes(StateMachine& dialog, TgBot::Message::Ptr message) {
+        SPDLOG_INFO("{} - onWaitingMinutes", _name);
         auto& dialogContext = dialog.context;
         SPDLOG_INFO("Add time {} to date {}.{}", message->text, dialogContext.monthNumber, dialogContext.dayNumber);
 
@@ -213,10 +245,15 @@ struct AddTimeState : IState {
 };
 
 struct ShowTimeState : IState {
+    static constexpr std::string_view _name = "ShowTime";
+    std::string_view name() const override { return _name; }
+
     TgBot::Message::Ptr initMessage;
     ShowTimeState(TgBot::Message::Ptr message) : initMessage(message) {}
 
     void onEnter(StateMachine& dialog) override {
+        SPDLOG_INFO("{} - onEnter", _name);
+
         if (!dialog.context.data.stat) {
             dialog.context.bot.getApi().sendMessage(initMessage->chat->id, "Sheduler is empty", nullptr, nullptr,
                                                     dialog.context.keyboardWithLayout);
@@ -232,6 +269,7 @@ struct ShowTimeState : IState {
     }
 
     void onWaitingMonthNumber(StateMachine& dialog, TgBot::Message::Ptr message) {
+        SPDLOG_INFO("{} - onWaitingMonthNumber", _name);
         SPDLOG_INFO("Got Month number {}", message->text);
 
         auto& dialogContext = dialog.context;
