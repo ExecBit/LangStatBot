@@ -7,7 +7,7 @@
 
 namespace command {
 
-enum class Type : uint32_t { addWord, showWord, addTime, showTime, dumpData, unknown };
+enum class Type : uint32_t { addWord, showWord, addTime, showTime, dumpData, recieveFile, unknown };
 
 struct Entry {
     std::string_view key;
@@ -20,6 +20,7 @@ constexpr std::array<Entry, static_cast<uint32_t>(Type::unknown)> table = {{
     {"add time", Type::addTime},
     {"show time", Type::showTime},
     {"dump data", Type::dumpData},
+    {"recieve file", Type::recieveFile},
 }};
 
 constexpr Type parse(std::string_view s) {

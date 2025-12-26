@@ -36,6 +36,7 @@ struct AddWordState;
 struct ShowWordState;
 struct ShowTimeState;
 struct DumpDataState;
+struct RecieveFileState;
 
 class StateMachine {
 public:
@@ -108,6 +109,9 @@ struct IdleState : IState {
             } break;
             case command::Type::dumpData: {
                 dialog.setState<DumpDataState>(message);
+            } break;
+            case command::Type::recieveFile: {
+                dialog.setState<RecieveFileState>(message);
             } break;
             case command::Type::unknown: {
                 dialog.context.bot.getApi().sendMessage(message->chat->id, "unknown command", nullptr, nullptr,
@@ -278,6 +282,30 @@ struct DumpDataState : IState {
 
     TgBot::Message::Ptr initMessage;
     DumpDataState(TgBot::Message::Ptr message) : initMessage(message) {}
+
+    void onEnter(StateMachine& dialog) override {
+        SPDLOG_INFO("{} - onEnter", _name);
+
+        auto& dialogContext = dialog.context;
+
+        if (const auto& rawString = dialogContext.dataMgr->save(dialogContext.data, "./data.json"); rawString.empty()) {
+            dialogContext.bot.getApi().sendMessage(initMessage->chat->id, "error", nullptr, nullptr,
+                                                   dialogContext.keyboardWithLayout);
+        } else {
+            dialogContext.bot.getApi().sendMessage(initMessage->chat->id, "success", nullptr, nullptr,
+                                                   dialogContext.keyboardWithLayout);
+        }
+
+        dialog.setState<IdleState>();
+    }
+};
+
+struct RecieveFileState : IState {
+    static constexpr std::string_view _name = "RecieveFile";
+    std::string_view name() const override { return _name; }
+
+    TgBot::Message::Ptr initMessage;
+    RecieveFileState(TgBot::Message::Ptr message) : initMessage(message) {}
 
     void onEnter(StateMachine& dialog) override {
         SPDLOG_INFO("{} - onEnter", _name);
