@@ -24,19 +24,19 @@ bool DataManager::load(std::string_view src, core::Data& dst) {
     return true;
 }
 
-bool DataManager::save(const core::Data& src, std::string_view path) {
+std::string DataManager::save(const core::Data& src, std::string_view path) {
     SPDLOG_INFO("Start save data");
     std::string rawData;
     if (!m_serializer->serialize(src, rawData)) {
-        return false;
+        return {};
     }
 
     if (!m_storage->write(path, rawData)) {
-        return false;
+        return {};
     }
 
     SPDLOG_INFO("Save data succeess");
-    return true;
+    return rawData;
 }
 
 };  // namespace io_interface

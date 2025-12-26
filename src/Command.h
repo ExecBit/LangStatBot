@@ -1,38 +1,32 @@
-#pragma once 
+#pragma once
 
 #include <array>
+#include <cstdint>
 #include <optional>
 #include <string_view>
-#include <cstdint>
 
 namespace command {
 
-enum class Type : uint32_t {
-    addWord,
-    showWord,
-    addTime,
-    showTime,
-    unknown
-};
+enum class Type : uint32_t { addWord, showWord, addTime, showTime, dumpData, unknown };
 
 struct Entry {
     std::string_view key;
     Type value;
 };
 
-constexpr std::array<Entry, 4> table = {{
-    {"add word",  Type::addWord},
-    {"show words",Type::showWord},
-    {"add time",  Type::addTime},
+constexpr std::array<Entry, static_cast<uint32_t>(Type::unknown)> table = {{
+    {"add word", Type::addWord},
+    {"show words", Type::showWord},
+    {"add time", Type::addTime},
     {"show time", Type::showTime},
+    {"dump data", Type::dumpData},
 }};
 
-constexpr std::optional<Type> parse(std::string_view s) {
+constexpr Type parse(std::string_view s) {
     for (const auto& e : table) {
-        if (e.key == s)
-            return e.value;
+        if (e.key == s) return e.value;
     }
-    return std::nullopt;
+    return Type::unknown;
 }
 
-} // namespace command
+}  // namespace command

@@ -22,17 +22,22 @@ int main() {
 
     std::string token;
     if (const auto env = getenv("TOKEN"); !env) {
-        SPDLOG_ERROR("FATAL! Token not found");
+        SPDLOG_ERROR("FATAL! TOKEN not found");
         return 1;
     } else {
         token = std::string{env};
     }
 
-    SPDLOG_INFO("Token: {}", token);
-    //SPDLOG_INFO("Token: {}", token);
+    std::string dataPath;
+//  if (const auto env = getenv("DATA_PATH"); !env) {
+//      SPDLOG_ERROR("FATAL! DATA_PATH not found");
+//      return 1;
+//  } else {
+//      dataPath = std::string{env};
+//  }
 
     auto dataMgr = std::make_unique<io_interface::DataManager>(std::make_unique<io_interface::Storage>(),
-                                                               std::make_unique<serialization::JsonSerializer>());
+                                                               std::make_unique<serialization::JsonSerializer>(), dataPath);
 
     core::App app{token, std::move(dataMgr)};
 
@@ -42,6 +47,8 @@ int main() {
     }
 
     app.start();
+
+    SPDLOG_INFO("APP FINISH");
 
     return 0;
 }

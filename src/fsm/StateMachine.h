@@ -8,40 +8,25 @@
 
 #include "../Command.h"
 #include "../Data.h"
+#include "../IDataManager.h"
+#include "../def.h"
 #include "../logger/Logger.h"
 #include "IState.h"
-
-namespace {
-
-using namespace std;
-using namespace TgBot;
-
-void createKeyboard(const vector<vector<string>>& buttonLayout, ReplyKeyboardMarkup::Ptr& kb) {
-    for (size_t i = 0; i < buttonLayout.size(); ++i) {
-        vector<KeyboardButton::Ptr> row;
-        for (size_t j = 0; j < buttonLayout[i].size(); ++j) {
-            KeyboardButton::Ptr button(new KeyboardButton);
-            button->text = buttonLayout[i][j];
-            button->requestContact = false;
-            button->requestLocation = false;
-            row.push_back(button);
-        }
-        kb->keyboard.push_back(row);
-    }
-}
-
-}  // namespace
 
 namespace fsm {
 
 struct Context {
-    Context(TgBot::Bot& bot, core::Data& data) : bot(bot), data(data) {}
+    Context(TgBot::Bot& bot, core::Data& data, io_interface::IDataManager* dataMgr)
+        : bot(bot)
+        , data(data)
+        , dataMgr(dataMgr) {}
     int monthNumber{};
     int dayNumber{};
     TgBot::Bot& bot;
     core::Data& data;
-    ReplyKeyboardMarkup::Ptr keyboardWithLayout;
-    ReplyKeyboardMarkup::Ptr keyboardChooseMonth;
+    io_interface::IDataManager* dataMgr;
+    TgBot::ReplyKeyboardMarkup::Ptr keyboardWithLayout;
+    TgBot::ReplyKeyboardMarkup::Ptr keyboardChooseMonth;
 };
 
 class StateMachine;
@@ -50,22 +35,19 @@ struct AddTimeState;
 struct AddWordState;
 struct ShowWordState;
 struct ShowTimeState;
+struct DumpDataState;
 
 class StateMachine {
 public:
-    explicit StateMachine(TgBot::Bot& bot, core::Data& data) : context(bot, data) {
+    explicit StateMachine(TgBot::Bot& bot, core::Data& data, io_interface::IDataManager* dataMgr)
+        : context(bot, data, dataMgr) {
         SPDLOG_INFO("Init");
 
-        context.keyboardWithLayout = ReplyKeyboardMarkup::Ptr(new ReplyKeyboardMarkup);
-        context.keyboardChooseMonth = ReplyKeyboardMarkup::Ptr(new ReplyKeyboardMarkup);
+        context.keyboardWithLayout = TgBot::ReplyKeyboardMarkup::Ptr(new TgBot::ReplyKeyboardMarkup);
+        context.keyboardChooseMonth = TgBot::ReplyKeyboardMarkup::Ptr(new TgBot::ReplyKeyboardMarkup);
 
-        createKeyboard({{"add word", "add time"}, {"show words", "show time"}}, context.keyboardWithLayout);
-        createKeyboard(
-            {
-                {"1", "2", "3", "4", "5", "6"},
-                {"7", "8", "9", "10", "11", "12"},
-            },
-            context.keyboardChooseMonth);
+        def::createKeyboard(def::keyboardWithLayoutVector, context.keyboardWithLayout);
+        def::createKeyboard(def::keyboardChooseMonthVector, context.keyboardChooseMonth);
 
         setState<IdleState>();
     }
@@ -75,9 +57,15 @@ public:
     template <typename T, typename... Args>
     void setState(Args&&... args) {
         static_assert(std::is_base_of_v<IState, T>, "State must inherit from IDialogState");
+
+        std::string_view prevState = "Initial";
+        if (state) {
+            prevState = state->name();
+        }
+
         state = std::make_unique<T>(std::forward<Args>(args)...);
         state->onEnter(*this);
-        SPDLOG_INFO("Transition to state {}", state->name());
+        SPDLOG_INFO("Transition from '{}' to '{}'", prevState, state->name());
     }
 
     Context context;
@@ -91,12 +79,11 @@ private:
 // ================== States ==================
 
 struct IdleState : IState {
-
     static constexpr std::string_view _name = "Idle";
     std::string_view name() const override { return _name; }
 
     void onEnter(StateMachine& dialog) override {
-        SPDLOG_INFO("onEnter");
+        SPDLOG_INFO("{} - onEnter", _name);
 
         dialog.functionExecute = [this](StateMachine& stateMachine, TgBot::Message::Ptr msg) {
             return onMessage(stateMachine, msg);
@@ -104,29 +91,32 @@ struct IdleState : IState {
     }
 
     void onMessage(StateMachine& dialog, TgBot::Message::Ptr message) {
-        SPDLOG_INFO("onMessage");
+        SPDLOG_INFO("{} - onMessage", _name);
 
-        if (const auto command = command::parse(message->text); command) {
-            switch (command.value()) {
-                case command::Type::addWord: {
-                    dialog.setState<AddWordState>(message);
-                }; break;
-                case command::Type::showWord: {
-                    dialog.setState<ShowWordState>(message);
-                }; break;
-                case command::Type::addTime: {
-                    dialog.setState<AddTimeState>(message);
-                }; break;
-                case command::Type::showTime: {
-                    dialog.setState<ShowTimeState>(message);
-                } break;
-                case command::Type::unknown: {
-                    dialog.context.bot.getApi().sendMessage(message->chat->id, "unknown command", nullptr, nullptr,
-                                                            dialog.context.keyboardWithLayout);
-                }; break;
-            }
-            return;
+        switch (command::parse(message->text)) {
+            case command::Type::addWord: {
+                dialog.setState<AddWordState>(message);
+            }; break;
+            case command::Type::showWord: {
+                dialog.setState<ShowWordState>(message);
+            }; break;
+            case command::Type::addTime: {
+                dialog.setState<AddTimeState>(message);
+            }; break;
+            case command::Type::showTime: {
+                dialog.setState<ShowTimeState>(message);
+            } break;
+            case command::Type::dumpData: {
+                dialog.setState<DumpDataState>(message);
+            } break;
+            case command::Type::unknown: {
+                dialog.context.bot.getApi().sendMessage(message->chat->id, "unknown command", nullptr, nullptr,
+                                                        dialog.context.keyboardWithLayout);
+
+                dialog.setState<IdleState>();
+            }; break;
         }
+        return;
     }
 };
 
@@ -277,6 +267,36 @@ struct ShowTimeState : IState {
 
         dialogContext.bot.getApi().sendMessage(message->chat->id, monthStat.print(), nullptr, nullptr,
                                                dialogContext.keyboardWithLayout);
+
+        dialog.setState<IdleState>();
+    }
+};
+
+struct DumpDataState : IState {
+    static constexpr std::string_view _name = "DumpData";
+    std::string_view name() const override { return _name; }
+
+    TgBot::Message::Ptr initMessage;
+    DumpDataState(TgBot::Message::Ptr message) : initMessage(message) {}
+
+    void onEnter(StateMachine& dialog) override {
+        SPDLOG_INFO("{} - onEnter", _name);
+
+        auto& dialogContext = dialog.context;
+
+        auto input_file(std::make_shared<TgBot::InputFile>());
+        input_file->data = "error";
+        input_file->mimeType = "application/json";
+        input_file->fileName = "data.json";
+
+        if (const auto& rawString = dialogContext.dataMgr->save(dialogContext.data, "./data.json");
+            !rawString.empty()) {
+            input_file->data = rawString;
+        }
+
+        // ialogContext.bot.getApi().sendDocument(initMessage->chat->id, input_file, {}, {}, nullptr,
+        //                                        dialogContext.keyboardWithLayout);
+        dialogContext.bot.getApi().sendDocument(initMessage->chat->id, input_file);
 
         dialog.setState<IdleState>();
     }
