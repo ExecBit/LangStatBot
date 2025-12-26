@@ -89,7 +89,9 @@ private:
 
 struct IdleState : IState {
     void onEnter(StateMachine& dialog) override {
-        dialog.functionExecute = std::bind(&IdleState::onMessage, this, std::placeholders::_1, std::placeholders::_2);
+        dialog.functionExecute = [this](StateMachine& stateMachine, TgBot::Message::Ptr msg) {
+            return onMessage(stateMachine, msg);
+        };
     }
 
     void onMessage(StateMachine& dialog, TgBot::Message::Ptr message) {
@@ -108,6 +110,8 @@ struct IdleState : IState {
                     dialog.setState<ShowTimeState>(message);
                 } break;
                 case command::Type::unknown: {
+                    dialog.context.bot.getApi().sendMessage(message->chat->id, "unknown command", nullptr, nullptr,
+                                                            dialog.context.keyboardWithLayout);
                 }; break;
             }
             return;
@@ -121,8 +125,9 @@ struct AddWordState : IState {
 
     void onEnter(StateMachine& dialog) override {
         dialog.context.bot.getApi().sendMessage(initMessage->chat->id, "Enter text");
-        dialog.functionExecute =
-            std::bind(&AddWordState::onMessage, this, std::placeholders::_1, std::placeholders::_2);
+        dialog.functionExecute = [this](StateMachine& stateMachine, TgBot::Message::Ptr msg) {
+            return onMessage(stateMachine, msg);
+        };
     }
 
     void onMessage(StateMachine& dialog, TgBot::Message::Ptr message) {
@@ -155,7 +160,6 @@ struct ShowWordState : IState {
 
         dialog.setState<IdleState>();
     }
-
 };
 
 struct AddTimeState : IState {
@@ -165,8 +169,10 @@ struct AddTimeState : IState {
     void onEnter(StateMachine& dialog) override {
         dialog.context.bot.getApi().sendMessage(initMessage->chat->id, "Enter month number", nullptr, nullptr,
                                                 dialog.context.keyboardChooseMonth);
-        dialog.functionExecute =
-            std::bind(&AddTimeState::onWaitingMonthNumber, this, std::placeholders::_1, std::placeholders::_2);
+
+        dialog.functionExecute = [this](StateMachine& stateMachine, TgBot::Message::Ptr msg) {
+            return onWaitingMonthNumber(stateMachine, msg);
+        };
     }
 
     void onWaitingMonthNumber(StateMachine& dialog, TgBot::Message::Ptr message) {
@@ -175,8 +181,9 @@ struct AddTimeState : IState {
 
         dialog.context.monthNumber = stoi(message->text);
 
-        dialog.functionExecute =
-            std::bind(&AddTimeState::onWaitingDayNumber, this, std::placeholders::_1, std::placeholders::_2);
+        dialog.functionExecute = [this](StateMachine& stateMachine, TgBot::Message::Ptr msg) {
+            return onWaitingDayNumber(stateMachine, msg);
+        };
     }
 
     void onWaitingDayNumber(StateMachine& dialog, TgBot::Message::Ptr message) {
@@ -185,8 +192,9 @@ struct AddTimeState : IState {
         dialog.context.bot.getApi().sendMessage(message->chat->id, "choose mount of minutes");
         dialog.context.dayNumber = stoi(message->text);
 
-        dialog.functionExecute =
-            std::bind(&AddTimeState::onWaitingMinutes, this, std::placeholders::_1, std::placeholders::_2);
+        dialog.functionExecute = [this](StateMachine& stateMachine, TgBot::Message::Ptr msg) {
+            return onWaitingMinutes(stateMachine, msg);
+        };
     }
 
     void onWaitingMinutes(StateMachine& dialog, TgBot::Message::Ptr message) {
@@ -218,8 +226,9 @@ struct ShowTimeState : IState {
 
         dialog.context.bot.getApi().sendMessage(initMessage->chat->id, "Enter month number", nullptr, nullptr,
                                                 dialog.context.keyboardChooseMonth);
-        dialog.functionExecute =
-            std::bind(&ShowTimeState::onWaitingMonthNumber, this, std::placeholders::_1, std::placeholders::_2);
+        dialog.functionExecute = [this](StateMachine& stateMachine, TgBot::Message::Ptr msg) {
+            return onWaitingMonthNumber(stateMachine, msg);
+        };
     }
 
     void onWaitingMonthNumber(StateMachine& dialog, TgBot::Message::Ptr message) {
