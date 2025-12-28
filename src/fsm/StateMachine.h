@@ -2,9 +2,12 @@
 
 #include <tgbot/tgbot.h>
 
+#include <cctype>
+#include <chrono>
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <string>
 
 #include "../Command.h"
 #include "../Data.h"
@@ -37,6 +40,7 @@ struct ShowWordState;
 struct ShowTimeState;
 struct DumpDataState;
 struct RecieveFileState;
+struct EditTimeState;
 
 class StateMachine {
 public:
@@ -112,6 +116,9 @@ struct IdleState : IState {
             } break;
             case command::Type::recieveFile: {
                 dialog.setState<RecieveFileState>(message);
+            } break;
+            case command::Type::editTime: {
+                dialog.setState<EditTimeState>(message);
             } break;
             case command::Type::unknown: {
                 dialog.context.bot.getApi().sendMessage(message->chat->id, "unknown command", nullptr, nullptr,
@@ -189,33 +196,7 @@ struct AddTimeState : IState {
     void onEnter(StateMachine& dialog) override {
         SPDLOG_INFO("{} - onEnter", _name);
 
-        dialog.context.bot.getApi().sendMessage(initMessage->chat->id, "Enter month number", nullptr, nullptr,
-                                                dialog.context.keyboardChooseMonth);
-
-        dialog.functionExecute = [this](StateMachine& stateMachine, TgBot::Message::Ptr msg) {
-            return onWaitingMonthNumber(stateMachine, msg);
-        };
-    }
-
-    void onWaitingMonthNumber(StateMachine& dialog, TgBot::Message::Ptr message) {
-        SPDLOG_INFO("{} - onWaitingMonthNumber", _name);
-
-        SPDLOG_INFO("Add month number: {}", message->text);
-        dialog.context.bot.getApi().sendMessage(message->chat->id, "choose day");
-
-        dialog.context.monthNumber = stoi(message->text);
-
-        dialog.functionExecute = [this](StateMachine& stateMachine, TgBot::Message::Ptr msg) {
-            return onWaitingDayNumber(stateMachine, msg);
-        };
-    }
-
-    void onWaitingDayNumber(StateMachine& dialog, TgBot::Message::Ptr message) {
-        SPDLOG_INFO("{} - onWaitingDayNumber", _name);
-        SPDLOG_INFO("Add day: {}", message->text);
-
-        dialog.context.bot.getApi().sendMessage(message->chat->id, "choose mount of minutes");
-        dialog.context.dayNumber = stoi(message->text);
+        dialog.context.bot.getApi().sendMessage(initMessage->chat->id, "choose mount of minutes");
 
         dialog.functionExecute = [this](StateMachine& stateMachine, TgBot::Message::Ptr msg) {
             return onWaitingMinutes(stateMachine, msg);
@@ -224,14 +205,34 @@ struct AddTimeState : IState {
 
     void onWaitingMinutes(StateMachine& dialog, TgBot::Message::Ptr message) {
         SPDLOG_INFO("{} - onWaitingMinutes", _name);
+
+        auto now = std::chrono::system_clock::now();
+        auto today = std::chrono::floor<std::chrono::days>(now);
+        auto ymd = std::chrono::year_month_day(today);
+
+        int year = static_cast<int>(ymd.year());
+        unsigned month = static_cast<unsigned>(ymd.month());
+        unsigned day = static_cast<unsigned>(ymd.day());
+
         auto& dialogContext = dialog.context;
-        SPDLOG_INFO("Add time {} to date {}.{}", message->text, dialogContext.monthNumber, dialogContext.dayNumber);
+        SPDLOG_INFO("Add time {} to date {}.{}", message->text, month, day);
 
-        dialogContext.data.stat->years.at(2025).at(dialogContext.monthNumber).days[dialogContext.dayNumber] +=
-            stoi(message->text);
+        // auto& minutesCount = dialogContext.data.stat->years.at(year).at(month).readDays().at(day);
+        auto minutesCount = std::chrono::minutes{};
+        const auto& map = dialogContext.data.stat->years.at(year).at(month).readDays();
+        if (const auto itDay = map.find(day); itDay != map.end()) {
+            minutesCount = itDay->second;
+        }
 
-        std::string res{"Value is added, current state: "};
-        res += std::to_string(dialogContext.dayNumber) + " : " + message->text;
+        // = dialogContext.data.stat->years.at(year).at(month).readDays().find(day);
+        const auto sourceTime = std::to_string(minutesCount.count());
+
+        const auto currMinutes = dialogContext.data.stat->years.at(year).at(month).add(day, std::chrono::minutes{stoi(message->text)});
+
+        // minutesCount += std::chrono::minutes{stoi(message->text)};
+        const auto res = "Value is added, current state - " + std::to_string(day) + " : " +
+                         std::to_string(currMinutes.count()) + " (" + sourceTime + " + " + message->text + ")";
+
         dialogContext.bot.getApi().sendMessage(message->chat->id, res, nullptr, nullptr,
                                                dialogContext.keyboardWithLayout);
         dialog.setState<IdleState>();
@@ -326,6 +327,69 @@ struct RecieveFileState : IState {
         //                                        dialogContext.keyboardWithLayout);
         dialogContext.bot.getApi().sendDocument(initMessage->chat->id, input_file);
 
+        dialog.setState<IdleState>();
+    }
+};
+
+struct EditTimeState : IState {
+    static constexpr std::string_view _name = "AddTime";
+    std::string_view name() const override { return _name; }
+
+    TgBot::Message::Ptr initMessage;
+    EditTimeState(TgBot::Message::Ptr message) : initMessage(message) {}
+
+    void onEnter(StateMachine& dialog) override {
+        SPDLOG_INFO("{} - onEnter", _name);
+
+        dialog.context.bot.getApi().sendMessage(initMessage->chat->id, "Enter month number", nullptr, nullptr,
+                                                dialog.context.keyboardChooseMonth);
+
+        dialog.functionExecute = [this](StateMachine& stateMachine, TgBot::Message::Ptr msg) {
+            return onWaitingMonthNumber(stateMachine, msg);
+        };
+    }
+
+    void onWaitingMonthNumber(StateMachine& dialog, TgBot::Message::Ptr message) {
+        SPDLOG_INFO("{} - onWaitingMonthNumber", _name);
+
+        SPDLOG_INFO("Add month number: {}", message->text);
+        dialog.context.bot.getApi().sendMessage(message->chat->id, "choose day");
+
+        dialog.context.monthNumber = stoi(message->text);
+
+        dialog.functionExecute = [this](StateMachine& stateMachine, TgBot::Message::Ptr msg) {
+            return onWaitingDayNumber(stateMachine, msg);
+        };
+    }
+
+    void onWaitingDayNumber(StateMachine& dialog, TgBot::Message::Ptr message) {
+        SPDLOG_INFO("{} - onWaitingDayNumber", _name);
+        SPDLOG_INFO("Add day: {}", message->text);
+
+        dialog.context.bot.getApi().sendMessage(message->chat->id, "choose mount of minutes");
+        dialog.context.dayNumber = stoi(message->text);
+
+        dialog.functionExecute = [this](StateMachine& stateMachine, TgBot::Message::Ptr msg) {
+            return onWaitingMinutes(stateMachine, msg);
+        };
+    }
+
+    void onWaitingMinutes(StateMachine& dialog, TgBot::Message::Ptr message) {
+        SPDLOG_INFO("{} - onWaitingMinutes", _name);
+        auto& dialogContext = dialog.context;
+        SPDLOG_INFO("Add time {} to date {}.{}", message->text, dialogContext.monthNumber, dialogContext.dayNumber);
+
+        dialogContext.data.stat->years.at(2025)
+            .at(dialogContext.monthNumber)
+            .edit(dialogContext.dayNumber, std::chrono::minutes{stoi(message->text)});
+
+        //      dialogContext.data.stat->years.at(2025).at(dialogContext.monthNumber).days[dialogContext.dayNumber] =
+        //          std::chrono::minutes{stoi(message->text)};
+
+        std::string res{"Value is added, current state: "};
+        res += std::to_string(dialogContext.dayNumber) + " : " + message->text;
+        dialogContext.bot.getApi().sendMessage(message->chat->id, res, nullptr, nullptr,
+                                               dialogContext.keyboardWithLayout);
         dialog.setState<IdleState>();
     }
 };

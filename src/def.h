@@ -9,7 +9,8 @@
 namespace def {
 
 inline std::vector<std::vector<std::string>> keyboardWithLayoutVector = {
-    {"add word", "add time"}, {"show words", "show time"}, {"dump data", "recieve file"}};
+    {"option", "edit time"}, {"dump data", "recieve file"},{"show words", "show time"}, {"add word","add time"}};
+
 
 inline std::vector<std::vector<std::string>> keyboardChooseMonthVector = {
     {"1", "2", "3", "4", "5", "6"},

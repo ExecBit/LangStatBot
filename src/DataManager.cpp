@@ -1,6 +1,7 @@
 #include "DataManager.h"
 
 #include <memory>
+
 #include "Data.h"
 #include "logger/Logger.h"
 
@@ -16,6 +17,10 @@ bool DataManager::load(std::string_view src, core::Data& dst) {
     core::Data data;
     if (!m_serializer->deserialize(rawData, data)) {
         return false;
+    }
+
+    for (auto& stat : data.stat->years | std::views::values | std::views::join | std::views::values) {
+        stat.update();
     }
 
     dst = std::move(data);
