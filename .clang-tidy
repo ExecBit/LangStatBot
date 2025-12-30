@@ -1,0 +1,10 @@
+Checks: >
+  -*,
+  bugprone-*,
+  clang-analyzer-*,
+  performance-*,
+  modernize-*,
+  readability-const-return-type
+
+WarningsAsErrors: ''
+HeaderFilterRegex: 'src/.*'

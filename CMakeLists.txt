@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(BUILD_TESTS "Build tests" OFF)
+option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
+option(ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
+
 add_compile_options(-Wall
     -Wextra
     -Wpedantic
@@ -16,10 +19,15 @@ add_compile_options(-Wall
 )
 
 find_package(spdlog REQUIRED)
-#   find_program(CLANG_TIDY_EXE NAMES clang-tidy)
-#   if(CLANG_TIDY_EXE)
-#       set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};--config-file=${CMAKE_SOURCE_DIR}/.clang-tidy")
-#   endif()
+
+if (ENABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY_EXE NAMES clang-tidy)
+    if (CLANG_TIDY_EXE)
+        set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY_EXE})
+    else()
+        message(WARNING "clang-tidy not found")
+    endif()
+endif()
 
 include(FetchContent)
 FetchContent_Declare(
@@ -52,6 +60,11 @@ target_link_libraries(${PROJECT_NAME}
         nlohmann_json
         spdlog::spdlog_header_only
 )
+
+if (ENABLE_ASAN)
+    add_compile_options(-fsanitize=address,undefined)
+    add_link_options(-fsanitize=address,undefined)
+endif()
 
 if(BUILD_TESTS)
     enable_testing()
