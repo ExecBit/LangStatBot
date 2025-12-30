@@ -1,9 +1,6 @@
 #pragma once
 
-#include <tgbot/tgbot.h>
-
 #include <memory>
-
 #include "Data.h"
 #include "IDataManager.h"
 #include "BotEntity.h"

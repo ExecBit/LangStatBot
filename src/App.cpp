@@ -26,10 +26,9 @@ void App::start() {
     std::signal(SIGINT, sigint_handler);
 
     try {
-        auto longPoll = m_bot.longPollObj();
         while (!gStopProceedLoop) {
             SPDLOG_INFO("Long poll started");
-            longPoll.start();
+            m_bot.startPoll();
         }
         SPDLOG_WARN("STOP LOOP");
 

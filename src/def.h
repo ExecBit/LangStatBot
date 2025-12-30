@@ -1,16 +1,25 @@
 
 #pragma once
 
-#include <tgbot/tgbot.h>
-
 #include <string>
+#include <tgbot/tgbot.h>
 #include <vector>
 
 namespace def {
 
-inline std::vector<std::vector<std::string>> keyboardWithLayoutVector = {
-    {"option", "edit time"}, {"dump data", "recieve file"},{"show words", "show time"}, {"add word","add time"}};
+enum class KeyboardType : std::uint8_t { keyboardWithLayout, keyboardChooseMonth, none };
 
+struct DocumentData {
+    std::string data;
+    std::string mimeType;
+    std::string fileName;
+};
+
+inline std::vector<std::vector<std::string>> keyboardWithLayoutVector = {
+    {"option", "edit time"},
+    {"dump data", "recieve file"},
+    {"show words", "show time"},
+    {"add word", "add time"}};
 
 inline std::vector<std::vector<std::string>> keyboardChooseMonthVector = {
     {"1", "2", "3", "4", "5", "6"},
@@ -32,4 +41,4 @@ inline void createKeyboard(const std::vector<std::vector<std::string>>& buttonLa
     }
 }
 
-};  // namespace def
+}; // namespace def
