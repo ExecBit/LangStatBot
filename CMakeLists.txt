@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.24)
 project(lang_time_tracker_bot)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -20,15 +20,6 @@ add_compile_options(-Wall
 
 find_package(spdlog REQUIRED)
 
-if (ENABLE_CLANG_TIDY)
-    find_program(CLANG_TIDY_EXE NAMES clang-tidy)
-    if (CLANG_TIDY_EXE)
-        set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY_EXE})
-    else()
-        message(WARNING "clang-tidy not found")
-    endif()
-endif()
-
 include(FetchContent)
 FetchContent_Declare(
     tgbot-cpp
@@ -44,27 +35,29 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
-add_executable(lang_time_tracker_bot)
-
 file(GLOB_RECURSE SOURCES src/*.cpp src/*.c src/*.h src/*.hpp)
+list(FILTER SOURCES EXCLUDE REGEX ".*(test/|main).*$")
 
-target_sources(lang_time_tracker_bot
+add_library(lang_time_tracker_lib)
+
+target_sources(lang_time_tracker_lib
     PRIVATE
         ${SOURCES}
-        #src/main.cpp
 )
 
-target_include_directories(${PROJECT_NAME}
+target_include_directories(lang_time_tracker_lib
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(lang_time_tracker_lib
     PRIVATE
         TgBot
         nlohmann_json
         spdlog::spdlog_header_only
 )
+
+add_subdirectory(src/main)
 
 if (ENABLE_ASAN)
     add_compile_options(-fsanitize=address,undefined)
@@ -75,5 +68,15 @@ if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(test)
 endif()
+
+if (ENABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY_EXE NAMES clang-tidy)
+    if (CLANG_TIDY_EXE)
+        set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY_EXE})
+    else()
+        message(WARNING "clang-tidy not found")
+    endif()
+endif()
+
 
 

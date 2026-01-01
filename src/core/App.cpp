@@ -26,11 +26,11 @@ void App::start() {
     std::signal(SIGINT, sigint_handler);
 
     try {
+        SPDLOG_INFO("Long poll started");
         while (!gStopProceedLoop) {
-            SPDLOG_INFO("Long poll started");
             m_bot.startPoll();
         }
-        SPDLOG_WARN("STOP LOOP");
+        SPDLOG_WARN("Long poll stopped");
 
         m_dataMgr->save(m_data, "./data.json");
     } catch (std::exception& e) {

@@ -41,10 +41,11 @@ void AddTimeState::onWaitingMinutes(StateMachine& dialog, const core::Message& m
     }
     const auto sourceTime = std::to_string(minutesCount.count());
 
-    std::chrono::minutes currMinutes;
+    auto currMinutes = std::chrono::minutes{};
     if (const auto res = def::toInt(message.text); !res) {
         SPDLOG_WARN("Wrong value - {}", message.text);
-        dialogContext.bot->sendMessage(message.chat_id, "Wrong value", def::KeyboardType::keyboardChooseCommands);
+        dialogContext.bot->sendMessage(message.chat_id, "Wrong value",
+                                       def::KeyboardType::keyboardChooseCommands);
         dialog.setState<IdleState>();
         return;
     } else {
