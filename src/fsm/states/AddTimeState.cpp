@@ -54,7 +54,7 @@ void AddTimeState::onWaitingMinutes(StateMachine& dialog, const core::Message& m
                      std::to_string(currMinutes.count()) + " (" + sourceTime + " + " +
                      message.text + ")";
 
-    dialogContext.bot->sendMessage(message.chat_id, res, def::KeyboardType::keyboardWithLayout);
+    dialogContext.bot->sendMessage(message.chat_id, res, def::KeyboardType::keyboardChooseCommands);
     dialog.setState<IdleState>();
 }
 }; // namespace fsm

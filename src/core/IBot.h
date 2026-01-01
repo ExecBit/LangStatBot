@@ -1,6 +1,6 @@
 #pragma once
 
-#include "def.h"
+#include "common/def.h"
 
 namespace fsm {
 class StateMachine;

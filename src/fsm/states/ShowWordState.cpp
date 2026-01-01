@@ -1,9 +1,9 @@
 #include "ShowWordState.h"
 #include "IdleState.h"
 
-#include "Data.h"
+#include "core/Data.h"
 #include "fsm/StateMachine.h"
-#include "def.h"
+#include "common/def.h"
 #include "logger/Logger.h"
 
 #include <memory>
@@ -18,7 +18,7 @@ void ShowWordState::onEnter(StateMachine& dialog) {
 
     if (dialog.context.data.stat->words.empty()) {
         dialog.context.bot->sendMessage(initMessage.chat_id, "Dictionary is empty",
-                                        def::KeyboardType::keyboardWithLayout);
+                                        def::KeyboardType::keyboardChooseCommands);
         return;
     }
 
@@ -27,7 +27,7 @@ void ShowWordState::onEnter(StateMachine& dialog) {
         msg += word + '\n';
     }
     dialog.context.bot->sendMessage(initMessage.chat_id, msg,
-                                    def::KeyboardType::keyboardWithLayout);
+                                    def::KeyboardType::keyboardChooseCommands);
 
     dialog.setState<IdleState>();
 }

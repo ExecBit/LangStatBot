@@ -1,8 +1,8 @@
 #include "ShowTimeState.h"
 
-#include "Data.h"
+#include "core/Data.h"
 #include "IdleState.h"
-#include "def.h"
+#include "common/def.h"
 #include "fsm/StateMachine.h"
 #include "logger/Logger.h"
 
@@ -16,9 +16,30 @@ void ShowTimeState::onEnter(StateMachine& dialog) {
 
     if (!dialog.context.data.stat) {
         dialog.context.bot->sendMessage(initMessage.chat_id, "Sheduler is empty",
-                                        def::KeyboardType::keyboardWithLayout);
+                                        def::KeyboardType::keyboardChooseCommands);
         dialog.setState<IdleState>();
         return;
+    }
+
+    dialog.context.bot->sendMessage(initMessage.chat_id, "Enter year number",
+                                    def::KeyboardType::keyboardChooseYear);
+    dialog.functionExecute = [this](StateMachine& stateMachine, const core::Message& message) {
+        return onWaitingYearNumber(stateMachine, message);
+    };
+}
+
+void ShowTimeState::onWaitingYearNumber(StateMachine& dialog, const core::Message& message) {
+    SPDLOG_INFO("{} - onWaitingYearNumber", _name);
+    SPDLOG_INFO("Got year number {}", message.text);
+
+    auto& dialogContext = dialog.context;
+
+    if (const auto res = def::toInt(message.text); !res) {
+        SPDLOG_WARN("Wrong value - {}", message.text);
+        dialog.setState<IdleState>();
+        return;
+    } else {
+        dialogContext.yearNumber = *res;
     }
 
     dialog.context.bot->sendMessage(initMessage.chat_id, "Enter month number",
@@ -41,9 +62,10 @@ void ShowTimeState::onWaitingMonthNumber(StateMachine& dialog, const core::Messa
     } else {
         const auto& monthStat = dialogContext.data.stat->years[2025][*res];
         dialogContext.bot->sendMessage(message.chat_id, monthStat.print(),
-                                       def::KeyboardType::keyboardWithLayout);
+                                       def::KeyboardType::keyboardChooseCommands);
     }
 
     dialog.setState<IdleState>();
 }
+
 }; // namespace fsm

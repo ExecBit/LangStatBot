@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Data.h"
-#include "IDataManager.h"
-#include "Message.h"
+#include "core/Data.h"
+#include "io_interface/IDataManager.h"
+#include "core/Message.h"
 #include "IState.h"
-#include "IBot.h"
+#include "core/IBot.h"
 #include "logger/Logger.h"
 
 #include <memory>
@@ -17,6 +17,7 @@ struct Context {
         : bot(bot), data(data), dataMgr(dataMgr) {}
     int monthNumber{};
     int dayNumber{};
+    int yearNumber{};
     core::IBot* bot;
     core::Data& data;
     io_interface::IDataManager* dataMgr;

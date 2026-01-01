@@ -1,7 +1,7 @@
 #include "EditTimeState.h"
 
 #include "IdleState.h"
-#include "def.h"
+#include "common/def.h"
 #include "fsm/StateMachine.h"
 #include "logger/Logger.h"
 
@@ -75,7 +75,7 @@ void EditTimeState::onWaitingMinutes(StateMachine& dialog, const core::Message& 
 
     std::string res{"Value is added, current state: "};
     res += std::to_string(dialogContext.dayNumber) + " : " + message.text;
-    dialogContext.bot->sendMessage(message.chat_id, res, def::KeyboardType::keyboardWithLayout);
+    dialogContext.bot->sendMessage(message.chat_id, res, def::KeyboardType::keyboardChooseCommands);
     dialog.setState<IdleState>();
 }
 }; // namespace fsm

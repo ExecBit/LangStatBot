@@ -20,7 +20,7 @@ void AddWordState::onMessage(StateMachine& dialog, const core::Message& message)
 
     SPDLOG_INFO("Add word: {}", message.text);
     dialog.context.data.stat->words.push_back(message.text);
-    dialog.context.bot->sendMessage(message.chat_id, "ok", def::KeyboardType::keyboardWithLayout);
+    dialog.context.bot->sendMessage(message.chat_id, "ok", def::KeyboardType::keyboardChooseCommands);
 
     dialog.setState<IdleState>();
 }

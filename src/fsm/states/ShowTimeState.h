@@ -1,7 +1,7 @@
 #pragma once
 
 #include "fsm/IState.h"
-#include "Message.h"
+#include "core/Message.h"
 
 namespace fsm {
 
@@ -14,6 +14,7 @@ struct ShowTimeState : IState {
 
     void onEnter(StateMachine& dialog) override;
     void onWaitingMonthNumber(StateMachine& dialog, const core::Message& message);
+    void onWaitingYearNumber(StateMachine& dialog, const core::Message& message);
 };
 
 }; // namespace fsm

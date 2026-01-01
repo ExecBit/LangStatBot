@@ -4,8 +4,8 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 
-#include "../Data.h"
-#include "../logger/Logger.h"
+#include "core/Data.h"
+#include "logger/Logger.h"
 
 namespace core {
 

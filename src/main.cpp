@@ -1,4 +1,3 @@
-#include <json/json.h>
 #include <spdlog/spdlog.h>
 #include <tgbot/tgbot.h>
 
@@ -6,11 +5,10 @@
 #include <memory>
 #include <string>
 
-#include "App.h"
-#include "DataManager.h"
-#include "Storage.h"
+#include "core/App.h"
+#include "io_interface/DataManager.h"
+#include "io_interface/Storage.h"
 #include "serialization/JsonSerializer.h"
-//#include "logger/LoggerMacros.h"
 #include "logger/Logger.h"
 
 namespace io_interface {

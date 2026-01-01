@@ -1,7 +1,7 @@
 #pragma once
 
 #include "fsm/IState.h"
-#include "Message.h"
+#include "core/Message.h"
 
 namespace fsm {
 

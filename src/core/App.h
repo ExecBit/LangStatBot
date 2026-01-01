@@ -1,9 +1,9 @@
 #pragma once
 
 #include <memory>
-#include "Data.h"
-#include "IDataManager.h"
-#include "BotEntity.h"
+#include "core/Data.h"
+#include "io_interface/IDataManager.h"
+#include "core/BotEntity.h"
 
 namespace io_interface {
 class IDataManager;

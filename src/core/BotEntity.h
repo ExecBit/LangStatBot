@@ -1,16 +1,12 @@
 #pragma once
 
-#include "Data.h"
-#include "DataManager.h"
-#include "IBot.h"
-#include "TelegramBotAdapter.h"
+#include "core/Data.h"
+#include "core/IBot.h"
+#include "core/TelegramBotAdapter.h"
 #include "fsm/StateMachine.h"
-#include "tgbot/EventBroadcaster.h"
 
 #include <memory>
 #include <string_view>
-#include <tgbot/tgbot.h>
-#include <unordered_map>
 
 namespace core {
 
@@ -25,7 +21,6 @@ class BotEntity {
 
   private:
     std::unique_ptr<IBot> m_bot;
-    // TgBot::Bot m_bot;
     Data& m_data;
     fsm::StateMachine m_handler;
 };

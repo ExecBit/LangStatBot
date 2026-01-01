@@ -10,7 +10,7 @@
 
 #include "logger/Logger.h"
 #include "fsm/StateMachine.h"
-#include "Command.h"
+#include "common/Command.h"
 
 namespace fsm {
 void IdleState::onEnter(StateMachine& dialog) {
@@ -48,7 +48,7 @@ void IdleState::onMessage(StateMachine& dialog, const core::Message& message) {
     } break;
     case command::Type::unknown: {
         dialog.context.bot->sendMessage(message.chat_id, "unknown command",
-                                        def::KeyboardType::keyboardWithLayout);
+                                        def::KeyboardType::keyboardChooseCommands);
 
         dialog.setState<IdleState>();
     }; break;

@@ -11,7 +11,7 @@
 
 namespace def {
 
-enum class KeyboardType : std::uint8_t { keyboardWithLayout, keyboardChooseMonth, none };
+enum class KeyboardType : std::uint8_t { keyboardChooseCommands, keyboardChooseMonth,keyboardChooseYear, none };
 
 struct DocumentData {
     std::string data;
@@ -27,7 +27,7 @@ inline std::expected<int, std::errc> toInt(std::string_view s) {
     return value;
 }
 
-inline std::vector<std::vector<std::string>> keyboardWithLayoutVector = {
+inline std::vector<std::vector<std::string>> keyboardChooseCommandsVector = {
     {"option", "edit time"},
     {"dump data", "recieve file"},
     {"show words", "show time"},
@@ -36,6 +36,10 @@ inline std::vector<std::vector<std::string>> keyboardWithLayoutVector = {
 inline std::vector<std::vector<std::string>> keyboardChooseMonthVector = {
     {"1", "2", "3", "4", "5", "6"},
     {"7", "8", "9", "10", "11", "12"},
+};
+
+inline std::vector<std::vector<std::string>> keyboardChooseYearVector = {
+    {"2025", "2026"}
 };
 
 inline void createKeyboard(const std::vector<std::vector<std::string>>& buttonLayout,

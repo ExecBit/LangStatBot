@@ -14,10 +14,10 @@ void DumpDataState::onEnter(StateMachine& dialog) {
     if (const auto& rawString = dialogContext.dataMgr->save(dialogContext.data, "./data.json");
         rawString.empty()) {
         dialogContext.bot->sendMessage(initMessage.chat_id, "error",
-                                       def::KeyboardType::keyboardWithLayout);
+                                       def::KeyboardType::keyboardChooseCommands);
     } else {
         dialogContext.bot->sendMessage(initMessage.chat_id, "success",
-                                       def::KeyboardType::keyboardWithLayout);
+                                       def::KeyboardType::keyboardChooseCommands);
     }
 
     dialog.setState<IdleState>();

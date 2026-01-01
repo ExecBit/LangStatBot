@@ -1,7 +1,7 @@
 #pragma once
 
-#include "IDataManager.h"
-#include "IStorage.h"
+#include "io_interface/IDataManager.h"
+#include "io_interface/IStorage.h"
 #include "serialization/ISerializer.h"
 
 namespace io_interface {
