@@ -1,5 +1,4 @@
 #include <spdlog/spdlog.h>
-#include <tgbot/tgbot.h>
 
 #include <cstdlib>
 #include <memory>
