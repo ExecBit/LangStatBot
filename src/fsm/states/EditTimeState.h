@@ -13,6 +13,7 @@ struct EditTimeState : IState {
     EditTimeState(const core::Message& message);
 
     void onEnter(StateMachine& dialog) override;
+    void onWaitingYearNumber(StateMachine& dialog, const core::Message& message);
     void onWaitingMonthNumber(StateMachine& dialog, const core::Message& message);
     void onWaitingDayNumber(StateMachine& dialog, const core::Message& message);
     void onWaitingMinutes(StateMachine& dialog, const core::Message& message);

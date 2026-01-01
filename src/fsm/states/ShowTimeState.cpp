@@ -36,6 +36,8 @@ void ShowTimeState::onWaitingYearNumber(StateMachine& dialog, const core::Messag
 
     if (const auto res = def::toInt(message.text); !res) {
         SPDLOG_WARN("Wrong value - {}", message.text);
+        dialog.context.bot->sendMessage(message.chat_id, "Wrong value",
+                                        def::KeyboardType::keyboardChooseCommands);
         dialog.setState<IdleState>();
         return;
     } else {
@@ -57,10 +59,12 @@ void ShowTimeState::onWaitingMonthNumber(StateMachine& dialog, const core::Messa
 
     if (const auto res = def::toInt(message.text); !res) {
         SPDLOG_WARN("Wrong value - {}", message.text);
+        dialog.context.bot->sendMessage(message.chat_id, "Wrong value",
+                                        def::KeyboardType::keyboardChooseCommands);
         dialog.setState<IdleState>();
         return;
     } else {
-        const auto& monthStat = dialogContext.data.stat->years[2025][*res];
+        const auto& monthStat = dialogContext.data.stat->years[dialogContext.yearNumber][*res];
         dialogContext.bot->sendMessage(message.chat_id, monthStat.print(),
                                        def::KeyboardType::keyboardChooseCommands);
     }
