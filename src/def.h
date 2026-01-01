@@ -4,6 +4,10 @@
 #include <string>
 #include <tgbot/tgbot.h>
 #include <vector>
+#include <charconv>
+#include <expected>
+#include <string>
+
 
 namespace def {
 
@@ -14,6 +18,14 @@ struct DocumentData {
     std::string mimeType;
     std::string fileName;
 };
+
+inline std::expected<int, std::errc> toInt(std::string_view s) {
+    int value{};
+    auto [ptr, ec] = std::from_chars(s.data(), s.data() + s.size(), value);
+    if (ec != std::errc{} || ptr != s.data() + s.size())
+        return std::unexpected(ec);
+    return value;
+}
 
 inline std::vector<std::vector<std::string>> keyboardWithLayoutVector = {
     {"option", "edit time"},

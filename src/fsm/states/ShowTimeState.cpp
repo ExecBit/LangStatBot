@@ -1,13 +1,12 @@
 #include "ShowTimeState.h"
-#include "IdleState.h"
 
 #include "Data.h"
+#include "IdleState.h"
 #include "def.h"
-#include "logger/Logger.h"
 #include "fsm/StateMachine.h"
+#include "logger/Logger.h"
 
 #include <string>
-
 
 namespace fsm {
 ShowTimeState::ShowTimeState(const core::Message& message) : initMessage(message) {}
@@ -34,10 +33,16 @@ void ShowTimeState::onWaitingMonthNumber(StateMachine& dialog, const core::Messa
     SPDLOG_INFO("Got Month number {}", message.text);
 
     auto& dialogContext = dialog.context;
-    const auto& monthStat = dialogContext.data.stat->years.at(2025).at(stoi(message.text));
 
-    dialogContext.bot->sendMessage(message.chat_id, monthStat.print(),
-                                   def::KeyboardType::keyboardWithLayout);
+    if (const auto res = def::toInt(message.text); !res) {
+        SPDLOG_WARN("Wrong value - {}", message.text);
+        dialog.setState<IdleState>();
+        return;
+    } else {
+        const auto& monthStat = dialogContext.data.stat->years[2025][*res];
+        dialogContext.bot->sendMessage(message.chat_id, monthStat.print(),
+                                       def::KeyboardType::keyboardWithLayout);
+    }
 
     dialog.setState<IdleState>();
 }
