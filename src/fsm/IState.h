@@ -1,7 +1,6 @@
 #pragma once
 
-#include <string>
-#include <tgbot/tgbot.h>
+#include <string_view>
 
 namespace fsm {
 
