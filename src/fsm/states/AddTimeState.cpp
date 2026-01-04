@@ -41,7 +41,6 @@ void AddTimeState::onWaitingMinutes(StateMachine& dialog, const core::Message& m
     }
     const auto sourceTime = std::to_string(minutesCount.count());
 
-    auto currMinutes = std::chrono::minutes{};
     if (const auto res = def::toInt(message.text); !res) {
         SPDLOG_WARN("Wrong value - {}", message.text);
         dialogContext.bot->sendMessage(message.chat_id, "Wrong value",
@@ -49,14 +48,16 @@ void AddTimeState::onWaitingMinutes(StateMachine& dialog, const core::Message& m
         dialog.setState<IdleState>();
         return;
     } else {
-        dialogContext.data.stat->years[year][month].add(day, std::chrono::minutes{*res});
+        const auto currMinutes =
+            dialogContext.data.stat->years[year][month].add(day, std::chrono::minutes{*res});
+        const auto msgText = "Value is added, current state - " + std::to_string(day) + " : " +
+                             std::to_string(currMinutes.count()) + " (" + sourceTime + " + " +
+                             message.text + ")";
+
+        dialogContext.bot->sendMessage(message.chat_id, msgText,
+                                       def::KeyboardType::keyboardChooseCommands);
     }
 
-    const auto res = "Value is added, current state - " + std::to_string(day) + " : " +
-                     std::to_string(currMinutes.count()) + " (" + sourceTime + " + " +
-                     message.text + ")";
-
-    dialogContext.bot->sendMessage(message.chat_id, res, def::KeyboardType::keyboardChooseCommands);
     dialog.setState<IdleState>();
 }
 }; // namespace fsm

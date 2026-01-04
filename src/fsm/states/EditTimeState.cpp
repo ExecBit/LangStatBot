@@ -97,7 +97,7 @@ void EditTimeState::onWaitingMinutes(StateMachine& dialog, const core::Message& 
     } else {
         SPDLOG_INFO("Add time {} to date {}.{}", message.text, dialogContext.monthNumber,
                     dialogContext.dayNumber);
-        dialogContext.data.stat->years[2025][dialogContext.monthNumber].edit(
+        dialogContext.data.stat->years[dialog.context.yearNumber][dialogContext.monthNumber].edit(
             dialogContext.dayNumber, std::chrono::minutes{*res});
     }
 
