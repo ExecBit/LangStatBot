@@ -1,12 +1,11 @@
 #include "App.h"
+
 #include "logger/Logger.h"
 
 namespace {
 volatile std::sig_atomic_t gStopProceedLoop{0};
 }
-void sigint_handler(int signal) {
-    gStopProceedLoop = signal;
-}
+void sigint_handler(int signal) { gStopProceedLoop = signal; }
 
 namespace core {
 
@@ -31,7 +30,6 @@ void App::start() {
             m_bot.startPoll();
         }
         SPDLOG_WARN("Long poll stopped");
-
         m_dataMgr->save(m_data, "./data.json");
     } catch (std::exception& e) {
         SPDLOG_ERROR("EXCEPTION: {}", e.what());
@@ -40,4 +38,4 @@ void App::start() {
     }
 }
 
-};  // namespace core
+}; // namespace core
