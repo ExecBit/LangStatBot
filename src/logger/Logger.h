@@ -3,7 +3,7 @@
 
 namespace logger {
 
-void init();
+void init(bool log_to_file);
 spdlog::logger& logger();
 
 }
