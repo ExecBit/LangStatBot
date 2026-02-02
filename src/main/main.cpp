@@ -45,7 +45,5 @@ int main() {
 
     app.start();
 
-    SPDLOG_INFO("APP FINISH");
-
     return 0;
 }

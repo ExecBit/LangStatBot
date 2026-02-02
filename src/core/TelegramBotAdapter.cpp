@@ -15,7 +15,6 @@ TelegramBotAdapter::TelegramBotAdapter(const std::string& token) : m_bot(token) 
 
 void TelegramBotAdapter::sendMessage(std::int64_t chatId, const std::string& text,
                                      def::KeyboardType keyboardType) {
-    SPDLOG_WARN("sendMessage start");
     switch (keyboardType) {
     case def::KeyboardType::keyboardChooseMonth: {
         m_bot.getApi().sendMessage(chatId, text, nullptr, nullptr, keyboardChooseMonth);
@@ -30,7 +29,6 @@ void TelegramBotAdapter::sendMessage(std::int64_t chatId, const std::string& tex
         m_bot.getApi().sendMessage(chatId, text);
     }; break;
     }
-    SPDLOG_WARN("sendMessage done");
 }
 
 void TelegramBotAdapter::sendDocument(std::int64_t chatId, const def::DocumentData& doc,

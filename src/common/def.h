@@ -28,7 +28,7 @@ inline std::expected<int, std::errc> toInt(std::string_view s) {
 }
 
 inline std::vector<std::vector<std::string>> keyboardChooseCommandsVector = {
-    {"option", "edit time"},
+    {"total stat", "edit time"},
     {"dump data", "recieve file"},
     {"show words", "show time"},
     {"add word", "add time"}};

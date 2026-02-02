@@ -7,6 +7,7 @@
 #include "DumpDataState.h"
 #include "EditTimeState.h"
 #include "RecieveFileState.h"
+#include "TotalStatState.h"
 
 #include "logger/Logger.h"
 #include "fsm/StateMachine.h"
@@ -45,6 +46,9 @@ void IdleState::onMessage(StateMachine& dialog, const core::Message& message) {
     } break;
     case command::Type::editTime: {
         dialog.setState<EditTimeState>(message);
+    } break;
+    case command::Type::totalStat: {
+        dialog.setState<TotalStatState>(message);
     } break;
     case command::Type::unknown: {
         dialog.context.bot->sendMessage(message.chat_id, "unknown command",

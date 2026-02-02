@@ -24,18 +24,20 @@ bool App::init(std::string_view path) {
 void App::start() {
     std::signal(SIGINT, sigint_handler);
 
-    try {
-        SPDLOG_INFO("Long poll started");
-        while (!gStopProceedLoop) {
-            m_bot.startPoll();
-        }
-        SPDLOG_WARN("Long poll stopped");
-        m_dataMgr->save(m_data, "./data.json");
+    SPDLOG_INFO("APP STARTED");
+
+    while (!gStopProceedLoop) try {
+        m_bot.startPoll();
     } catch (std::exception& e) {
         SPDLOG_ERROR("EXCEPTION: {}", e.what());
+        SPDLOG_ERROR("RESTART");
     } catch (...) {
         SPDLOG_ERROR("FATAL EXCEPTION!");
+        SPDLOG_ERROR("RESTART");
     }
+
+    m_dataMgr->save(m_data, "./data.json");
+    SPDLOG_INFO("APP FINISHED");
 }
 
 }; // namespace core

@@ -19,6 +19,7 @@ void ShowWordState::onEnter(StateMachine& dialog) {
     if (dialog.context.data.stat->words.empty()) {
         dialog.context.bot->sendMessage(initMessage.chat_id, "Dictionary is empty",
                                         def::KeyboardType::keyboardChooseCommands);
+        //TODO почему это работает?
         return;
     }
 
